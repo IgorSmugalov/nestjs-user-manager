@@ -1,11 +1,15 @@
-FROM node:alpine As development
+FROM node:18-alpine
+
+# RUN apt-get update
+# RUN apt-get install -y openssl
 
 WORKDIR /app
 
-COPY --chown=node:node package*.json ./
+COPY  package*.json ./
 
 RUN npm ci
 
-COPY --chown=node:node . .
+COPY  . .
 
-USER node
+RUN npx prisma generate
+

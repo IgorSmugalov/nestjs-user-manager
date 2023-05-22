@@ -1,13 +1,46 @@
-version: '3'
+version: "3.9"
+
 services:
+
   app:
+    container_name: app
     build:
       dockerfile: Dockerfile
       context: .
+    command: npm run start:dev
+    restart: always
     volumes:
       - .:/app
+      - /app/node_modules
     env_file:
-    - .env
-    command: npm run start:dev
+      - .env
+    networks:
+      - nest
     ports:
       - 3000:3000
+      - 5555:5555
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: db
+    image: postgres:15.3
+    restart: always
+    volumes:
+      - nest_app_database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - nest
+    ports:
+      - '5432:5432'
+
+volumes:
+  nest_app_database:
+
+
+networks:
+  nest:
+    driver: bridge

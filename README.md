@@ -4,7 +4,12 @@
 
 # Description
 
-[Nest](https://github.com/nestjs/nest) for development with Prisma, PostgreSQL, Docker And Hot Reload
+[Nest](https://github.com/nestjs/nest) for local development with Prisma, PostgreSQL, Docker
+
+| Branch    | Options                                                  |
+| --------- | -------------------------------------------------------- |
+| main      | docker-compose with: Postgres, PgAdmin                   |
+| with-node | docker-compose with: Node, Postgres, PgAdmin + HotReload |
 
 # Usage
 
@@ -12,19 +17,15 @@
 - Run:
 
 ```bash
+$ npm i
 $ docker-compose up -d
-```
-
-- If you add / update package in node-modules on host -> run next command for rebuild Docker and renew container volume '/app/node_modules':
-
-```bash
-$ docker-compose up -d --build --renew-anon-volumes
-OR
-$ docker-compose up -d --build --V
+$ npm run start:dev
+$ npx prisma generate
 ```
 
 # Requirements:
 
+- Node
 - docker
 - docker-compose
 
@@ -40,7 +41,7 @@ $ docker-compose up -d --build --V
 
 ## Postgres:
 
-- `postgres:5432`
+- `localhost:5432`
 - **Username:** postgres
 - **Password:** password
 

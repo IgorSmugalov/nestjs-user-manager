@@ -7,13 +7,13 @@ services:
     image: postgres:15.3
     restart: unless-stopped
     volumes:
-      - nest_app_database:/var/lib/postgresql/data
+      - user_app_database:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
-      - nest
+      - user_app
     ports:
       - 5432:5432
 
@@ -26,17 +26,17 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
-      - nest_app_pgadmin:/var/lib/pgadmin
+      - user_app_pgadmin:/var/lib/pgadmin
     networks:
-      - nest
+      - user_app
     ports:
       - 5433:80
 
 volumes:
-  nest_app_database:
-  nest_app_pgadmin:
+  user_app_database:
+  user_app_pgadmin:
 
 
 networks:
-  nest:
+  user_app:
     driver: bridge

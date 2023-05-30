@@ -1,5 +1,5 @@
 {
-  "name": "nest_app",
+  "name": "user_app",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -73,6 +73,6 @@
     "testEnvironment": "node"
   },
   "prisma": {
-    "schema": "./src/database/schema.prisma"
+    "schema": "./src/prisma/schema.prisma"
   }
 }

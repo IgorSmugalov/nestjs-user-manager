@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { JwtService } from '../jwt.service';
 
 @Injectable()
-export class JwtAuthMiddleware implements NestMiddleware {
+export class AccessJwtAuthMiddleware implements NestMiddleware {
   constructor(private jwtService: JwtService) {}
   async use(req: Request, res: Response, next: () => void) {
     const authorizationHeader = req.headers.authorization;

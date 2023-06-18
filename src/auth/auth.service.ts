@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserCredentialsDTO } from './dto/user-credentials.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { HashService } from 'src/crypto/hash.service';
 import { UserAuthData } from '@prisma/client';
 import { JwtService } from './jwt.service';
+import {
+  IncorrectCredentials,
+  UserAlreadyExiststException,
+} from './auth.exceptions';
+import { LoginResultDTO } from './dto/login-result.dto';
 
 export interface Tokens {
   accessJwt: string;
@@ -24,45 +29,45 @@ export type RefreshTokenPayload = Pick<UserAuthData, 'id' | 'email'>;
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private hash: HashService,
-    private jwt: JwtService,
+    private hashService: HashService,
+    private jwtService: JwtService,
   ) {}
 
-  //TODO: Return login data
-  public async registerUser(userCredentials: UserCredentialsDTO): Promise<any> {
+  public async registerUser(
+    userCredentials: UserCredentialsDTO,
+  ): Promise<LoginResultDTO> {
     const { email, password } = userCredentials;
     const existingUser = await this.prisma.userAuthData.findUnique({
       where: { email },
     });
-    if (existingUser) throw new BadRequestException('User Exists'); //TODO: Rework exception
-    const hashedPassword = await this.hash.hashPassword(password);
+    if (existingUser) throw new UserAlreadyExiststException();
+    const hashedPassword = await this.hashService.hashPassword(password);
     const newUser = await this.prisma.userAuthData.create({
       data: { email, password: hashedPassword, userProfile: { create: {} } },
     });
-    const accessJwt = await this.jwt.signAccessJWT(newUser);
-    return { accessJwt };
+    const accessToken = await this.jwtService.signAccessJWT(newUser);
+    return new LoginResultDTO({ accessToken });
   }
 
-  //TODO: Return login data
-  public async loginUserByCredentials(
+  public async loginByCredentials(
     userCredentials: UserCredentialsDTO,
-  ): Promise<any> {
+  ): Promise<LoginResultDTO> {
     const { email, password } = userCredentials;
     const candidate = await this.prisma.userAuthData.findUnique({
       where: { email },
     });
-    const isPassValid = await this.hash.validatePassword(
+    const isPassValid = await this.hashService.validatePassword(
       candidate.password,
       password,
     );
     if (!candidate || !isPassValid) {
-      throw new BadRequestException('Login failed'); //TODO: Rework exception
+      throw new IncorrectCredentials();
     }
-    const accessJwt = await this.jwt.signAccessJWT(candidate);
-    return { accessJwt };
+    const accessToken = await this.jwtService.signAccessJWT(candidate);
+    return new LoginResultDTO({ accessToken });
   }
 
   public async check(token: string) {
-    return await this.jwt.jwtVerify(token);
+    return await this.jwtService.jwtVerify(token);
   }
 }

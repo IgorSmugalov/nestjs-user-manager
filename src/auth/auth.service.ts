@@ -10,21 +10,6 @@ import {
 } from './auth.exceptions';
 import { LoginResultDTO } from './dto/login-result.dto';
 
-export interface Tokens {
-  accessJwt: string;
-}
-
-export interface TokensPayloads {
-  accessJwtPayload: AccessTokenPayload;
-}
-
-export type AccessTokenPayload = Pick<
-  UserAuthData,
-  'id' | 'email' | 'activated' | 'userProfileId'
->;
-
-export type RefreshTokenPayload = Pick<UserAuthData, 'id' | 'email'>;
-
 @Injectable()
 export class AuthService {
   constructor(

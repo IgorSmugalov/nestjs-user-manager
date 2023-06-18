@@ -4,9 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
 import { KeyLike, SignJWT, jwtVerify } from 'jose';
 import { plainToInstance } from 'class-transformer';
-import { AccessJwtPayloadDTO } from './dto/access-jwt-payload.dto';
 import { JWT_CONFIG } from 'src/config';
 import { jwtConfig } from 'src/config/jwt.config';
+import { AccessJwtClaimsDTO } from './dto/jwt-claims.dto';
 
 @Injectable()
 export class JwtService {
@@ -26,20 +26,22 @@ export class JwtService {
   private config = this.configService.get<jwtConfig>(JWT_CONFIG);
 
   public async signAccessJWT(data: UserAuthData): Promise<string> {
-    const user = plainToInstance(AccessJwtPayloadDTO, data, {
+    const payload = plainToInstance(AccessJwtClaimsDTO, data, {
       strategy: 'excludeAll',
+      exposeUnsetFields: false,
     });
-    return await new SignJWT({ user })
+    return await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: this.config.accessJwtConfig.algorithm })
       .setExpirationTime(this.config.accessJwtConfig.expires)
       .sign(this.accessJWTPrivateKey);
   }
 
-  public async jwtVerify(token: string): Promise<AccessJwtPayloadDTO | null> {
+  public async jwtVerify(token: string): Promise<AccessJwtClaimsDTO | null> {
     try {
       const { payload } = await jwtVerify(token, this.accessJWTPublicKey);
-      const jwtUserData = plainToInstance(AccessJwtPayloadDTO, payload?.user, {
-        excludeExtraneousValues: true,
+      const jwtUserData = plainToInstance(AccessJwtClaimsDTO, payload, {
+        strategy: 'excludeAll',
+        exposeUnsetFields: false,
       });
       return jwtUserData;
     } catch {

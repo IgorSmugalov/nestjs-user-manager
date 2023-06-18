@@ -1,11 +1,11 @@
-import { AccessJwtPayloadDTO } from 'src/auth/dto/access-jwt-payload.dto';
+import { AccessJwtClaimsDTO } from 'src/auth/dto/jwt-claims.dto';
 
 export {};
 
 declare global {
   namespace Express {
     export interface Request {
-      user: AccessJwtPayloadDTO | null;
+      user: AccessJwtClaimsDTO | null;
     }
   }
 }

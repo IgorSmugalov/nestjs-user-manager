@@ -13,12 +13,14 @@ export class RegisteredJwtClaimsDTO implements RegisteredJwtClaims {
   @Expose()
   @IsString()
   jti: string = uuidv4();
+
   @ApiProperty()
   @Expose()
   @IsNumber()
   exp: number;
+
   @ApiProperty()
   @Expose()
   @IsNumber()
-  iat: number = Date.now();
+  iat: number;
 }

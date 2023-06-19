@@ -31,7 +31,7 @@ export class AccessJwtService {
     });
     return await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: this.config.algorithm })
-      .setExpirationTime(this.config.expires)
+      .setExpirationTime(this.config.expiresAfter)
       .sign(this.privateJwk);
   }
 

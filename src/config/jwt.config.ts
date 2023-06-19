@@ -3,7 +3,7 @@ import { JWT_CONFIG } from '.';
 
 export interface IJwtConfig {
   algorithm: string;
-  expires: string;
+  expiresAfter: number;
 }
 
 export interface IJwtSetConfig {
@@ -14,10 +14,10 @@ export interface IJwtSetConfig {
 export const jwtConfig = registerAs<IJwtSetConfig>(JWT_CONFIG, () => ({
   accessJwtConfig: {
     algorithm: process.env.JWT_ACCESS_ALGORITHM,
-    expires: process.env.JWT_ACCESS_EXPIRES,
+    expiresAfter: Number(process.env.JWT_ACCESS_EXPIRES_AFTER),
   },
   refreshJwtConfig: {
     algorithm: process.env.JWT_REFRESH_ALGORITHM,
-    expires: process.env.JWT_REFRESH_EXPIRES,
+    expiresAfter: Number(process.env.JWT_REFRESH_EXPIRES_AFTER),
   },
 }));

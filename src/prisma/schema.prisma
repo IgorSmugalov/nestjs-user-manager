@@ -13,18 +13,28 @@ datasource db {
 }
 
 model UserAuthData {
-  id                   String      @id @default(uuid())
-  email                String      @unique
+  id                   String         @id @default(uuid())
+  email                String         @unique
   password             String
-  activated            Boolean     @default(false)
-  activationKey        String      @unique @default(uuid())
-  activationKeyCreated DateTime    @default(now())
+  activated            Boolean        @default(false)
+  activationKey        String         @unique @default(uuid())
+  activationKeyCreated DateTime       @default(now())
   // 
-  userProfileId        String      @unique
-  userProfile          UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userProfileId        String         @unique
+  userProfile          UserProfile    @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   // 
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  refreshTokens        RefreshToken[]
+  // 
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id             String        @id
+  expiresAt      DateTime
+  issuedAt       DateTime
+  UserAuthData   UserAuthData? @relation(fields: [userAuthDataId], references: [id])
+  userAuthDataId String?
 }
 
 model UserProfile {

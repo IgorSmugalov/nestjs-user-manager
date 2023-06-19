@@ -14,6 +14,8 @@ import { RefreshJwtAuthMiddleware } from './auth/middlewares/refresh-jwt-auth.mi
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AccessJwtAuthMiddleware).forRoutes('*');
-    consumer.apply(RefreshJwtAuthMiddleware).forRoutes('/auth/refresh');
+    consumer
+      .apply(RefreshJwtAuthMiddleware)
+      .forRoutes('/auth/refresh', '/auth/logout');
   }
 }

@@ -46,11 +46,14 @@ export class AuthService {
     const candidate = await this.prisma.userAuthData.findUnique({
       where: { email },
     });
+    if (!candidate) {
+      throw new IncorrectCredentialsException();
+    }
     const isPassValid = await this.hashService.validatePassword(
       candidate.password,
       password,
     );
-    if (!candidate || !isPassValid) {
+    if (!isPassValid) {
       throw new IncorrectCredentialsException();
     }
     const accessToken = await this.accessJwtService.signJwt(candidate);
@@ -62,7 +65,7 @@ export class AuthService {
     const chekedUser = await this.prisma.userAuthData.findUnique({
       where: { id: user.id },
     });
-    if (!chekedUser) throw new UserUnauthorizedException(); //TODO: rework exception
+    if (!chekedUser) throw new UserUnauthorizedException();
     const accessToken = await this.accessJwtService.signJwt(chekedUser);
     const refreshToken = await this.refreshJwtService.signJwt(chekedUser);
     return { accessToken, refreshToken };
@@ -77,5 +80,9 @@ export class AuthService {
 
   public getAuthCookie(request: Request): string {
     return request.cookies.refresh;
+  }
+
+  public clearauthCookie(response: Response) {
+    return response.clearCookie('refresh');
   }
 }

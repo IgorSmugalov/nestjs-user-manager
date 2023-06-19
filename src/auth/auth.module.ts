@@ -3,12 +3,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { CryptoModule } from 'src/crypto/crypto.module';
-import { JwtService } from './jwt.service';
+import { AccessJwtService } from './access-jwt.service';
+import { RefreshJwtService } from './refresh-jwt.service';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtService],
+  providers: [AuthService, AccessJwtService, RefreshJwtService],
   imports: [PrismaModule, CryptoModule],
-  exports: [JwtService],
+  exports: [AccessJwtService, RefreshJwtService, AuthService],
 })
 export class AuthModule {}

@@ -1,7 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserAuthData } from '@prisma/client';
 import { Expose } from 'class-transformer';
-import { IsBoolean, IsEmail, IsStrongPassword, IsUUID } from 'class-validator';
+import {
+  Allow,
+  IsBoolean,
+  IsEmail,
+  IsStrongPassword,
+  IsUUID,
+} from 'class-validator';
 export class UserAuthDataEntity implements UserAuthData {
   @Expose()
   @ApiProperty()
@@ -36,6 +42,7 @@ export class UserAuthDataEntity implements UserAuthData {
 
   @Expose()
   @ApiProperty()
+  @Allow()
   activationKeyCreated: Date;
 
   @Expose()
@@ -45,9 +52,11 @@ export class UserAuthDataEntity implements UserAuthData {
 
   @Expose()
   @ApiProperty()
+  @Allow()
   createdAt: Date;
 
   @Expose()
   @ApiProperty()
+  @Allow()
   updatedAt: Date;
 }

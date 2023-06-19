@@ -1,11 +1,22 @@
 import { UserAuthData } from '@prisma/client';
-import * as jose from 'jose';
+import { RegisteredJwtClaims } from '../dto/registered-jwt-claims.dto';
 
-type BasicAccessJwtClaims = Pick<jose.JWTPayload, 'exp'>;
+export interface ITokens {
+  accessToken: string;
+  refreshToken: string;
+}
 
-export type AuthUserAccessJwtClaims = Pick<
+type AccessJwtRegisteredClaims = Pick<RegisteredJwtClaims, 'exp' | 'iat'>;
+type AccessJwtAuthClaims = Pick<
   UserAuthData,
-  'id' | 'userProfileId' | 'activated'
+  'id' | 'userProfileId' | 'activated' | 'updatedAt'
 >;
+export type AccessJwtClaims = AccessJwtRegisteredClaims & AccessJwtAuthClaims;
 
-export type AccessJwtClaimsSet = BasicAccessJwtClaims & AuthUserAccessJwtClaims;
+type RefreshJwtRegisteredClaims = Pick<
+  RegisteredJwtClaims,
+  'exp' | 'jti' | 'iat'
+>;
+type RefreshJwtAuthClaims = Pick<UserAuthData, 'id' | 'updatedAt'>;
+export type RefreshJwtClaims = RefreshJwtRegisteredClaims &
+  RefreshJwtAuthClaims;

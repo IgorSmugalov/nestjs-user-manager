@@ -8,6 +8,11 @@ export const jwkConfig = registerAs(JWK_CONFIG, () => ({
     privatePemFile: process.env.JWK_ACCESS_PRIVATE_KEY_FILE,
     publicPemFile: process.env.JWK_ACCESS_PUBLIC_KEY_FILE,
   },
+  refreshJwkConfig: {
+    algorithm: process.env.JWK_REFRESH_KEY_ALGORITHM,
+    privatePemFile: process.env.JWK_REFRESH_PRIVATE_KEY_FILE,
+    publicPemFile: process.env.JWK_REFRESH_PUBLIC_KEY_FILE,
+  },
 }));
 
 export type jwkConfig = ReturnType<typeof jwkConfig>;

@@ -18,9 +18,15 @@ export class UserAlreadyExiststException extends BadRequestException {
   }
 }
 
-export class IncorrectCredentials extends UnauthorizedException {
+export class IncorrectCredentialsException extends UnauthorizedException {
   constructor() {
     super(AuthExceptionMessages.incorrectCredentials);
+  }
+}
+
+export class UserUnauthorizedException extends UnauthorizedException {
+  constructor() {
+    super(AuthExceptionMessages.unauthorizedDefaultMessage);
   }
 }
 

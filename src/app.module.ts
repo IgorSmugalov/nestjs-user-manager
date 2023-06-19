@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { AccessJwtAuthMiddleware } from './auth/middlewares/access-jwt-auth.middleware';
+import { RefreshJwtAuthMiddleware } from './auth/middlewares/refresh-jwt-auth.middleware';
 
 @Module({
   imports: [ConfigModule, PrismaModule, AuthModule, CryptoModule],
@@ -13,5 +14,6 @@ import { AccessJwtAuthMiddleware } from './auth/middlewares/access-jwt-auth.midd
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AccessJwtAuthMiddleware).forRoutes('*');
+    consumer.apply(RefreshJwtAuthMiddleware).forRoutes('*');
   }
 }

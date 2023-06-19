@@ -12,4 +12,7 @@ export class LoginResultDTO {
   @Expose()
   @ApiProperty()
   accessToken: string;
+  @Expose()
+  @ApiProperty()
+  refreshToken: string;
 }

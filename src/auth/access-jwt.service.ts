@@ -29,10 +29,12 @@ export class AccessJwtService {
       strategy: 'excludeAll',
       exposeUnsetFields: false,
     });
-    return await new SignJWT({ ...payload })
+    payload.iat = Math.round(Date.now() / 1000);
+    payload.exp = payload.iat + this.config.expiresAfter;
+    const token = new SignJWT({ ...payload })
       .setProtectedHeader({ alg: this.config.algorithm })
-      .setExpirationTime(this.config.expiresAfter)
       .sign(this.privateJwk);
+    return await token;
   }
 
   public async verifyJwt(token: string): Promise<AccessJwtClaimsDTO | null> {

@@ -1,4 +1,4 @@
-import { RefreshToken, UserAuthData } from '@prisma/client';
+import { RefreshToken, User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
@@ -27,7 +27,7 @@ export class RefreshJwtService {
     this.publicJwk = await this.jwkService.getPublicJwk('refresh');
   }
 
-  public async signJwt(data: UserAuthData): Promise<string> {
+  public async signJwt(data: User): Promise<string> {
     const payload = plainToInstance(RefreshJwtClaimsDTO, data, {
       strategy: 'excludeAll',
       exposeUnsetFields: false,
@@ -61,7 +61,7 @@ export class RefreshJwtService {
         id: claims.jti,
         issuedAt: new Date(claims.iat * 1000),
         expiresAt: new Date(claims.exp * 1000),
-        userAuthDataId: claims.id,
+        UserId: claims.id,
       },
     });
   }
@@ -78,18 +78,16 @@ export class RefreshJwtService {
     }
   }
 
-  private async limitateJwtsCountForUser(
-    userAuthDataId: string,
-  ): Promise<void> {
+  private async limitateJwtsCountForUser(UserId: string): Promise<void> {
     const firstRedundantToken = await this.prisma.refreshToken.findFirst({
-      where: { userAuthDataId },
+      where: { UserId },
       orderBy: { issuedAt: 'desc' },
       skip: 5,
     });
     if (!firstRedundantToken) return;
     await this.prisma.refreshToken.deleteMany({
       where: {
-        userAuthDataId,
+        UserId,
         issuedAt: { lte: firstRedundantToken.issuedAt },
       },
     });

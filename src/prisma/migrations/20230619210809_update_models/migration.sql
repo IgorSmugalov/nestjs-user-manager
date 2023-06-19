@@ -1,3 +1,22 @@
+/*
+  Warnings:
+
+  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `UserProfile` table. If the table is not empty, all the data it contains will be lost.
+
+*/
+-- DropForeignKey
+ALTER TABLE "RefreshToken" DROP CONSTRAINT "RefreshToken_UserId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "User" DROP CONSTRAINT "User_userProfileId_fkey";
+
+-- DropTable
+DROP TABLE "User";
+
+-- DropTable
+DROP TABLE "UserProfile";
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -14,14 +33,14 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "UserProfile" (
+CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
     "name" TEXT,
     "surname" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "UserProfile_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -34,4 +53,7 @@ CREATE UNIQUE INDEX "User_activationKey_key" ON "User"("activationKey");
 CREATE UNIQUE INDEX "User_userProfileId_key" ON "User"("userProfileId");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_userProfileId_fkey" FOREIGN KEY ("userProfileId") REFERENCES "UserProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_userProfileId_fkey" FOREIGN KEY ("userProfileId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_UserId_fkey" FOREIGN KEY ("UserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

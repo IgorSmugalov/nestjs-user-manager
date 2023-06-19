@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserAuthData } from '@prisma/client';
+import { User } from '@prisma/client';
 import { Expose } from 'class-transformer';
 import {
   Allow,
@@ -8,7 +8,7 @@ import {
   IsStrongPassword,
   IsUUID,
 } from 'class-validator';
-export class UserAuthDataEntity implements UserAuthData {
+export class UserEntity implements User {
   @Expose()
   @ApiProperty()
   @IsUUID(4)

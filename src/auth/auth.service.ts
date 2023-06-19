@@ -26,12 +26,12 @@ export class AuthService {
     userCredentials: UserCredentialsDTO,
   ): Promise<ITokens> {
     const { email, password } = userCredentials;
-    const existingUser = await this.prisma.userAuthData.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
     if (existingUser) throw new UserAlreadyExiststException();
     const hashedPassword = await this.hashService.hashPassword(password);
-    const newUser = await this.prisma.userAuthData.create({
+    const newUser = await this.prisma.user.create({
       data: { email, password: hashedPassword, userProfile: { create: {} } },
     });
     const accessToken = await this.accessJwtService.signJwt(newUser);
@@ -43,7 +43,7 @@ export class AuthService {
     userCredentials: UserCredentialsDTO,
   ): Promise<ITokens> {
     const { email, password } = userCredentials;
-    const candidate = await this.prisma.userAuthData.findUnique({
+    const candidate = await this.prisma.user.findUnique({
       where: { email },
     });
     if (!candidate) {
@@ -62,7 +62,7 @@ export class AuthService {
   }
 
   public async authByRefreshToken(user: RefreshJwtClaimsDTO): Promise<ITokens> {
-    const chekedUser = await this.prisma.userAuthData.findUnique({
+    const chekedUser = await this.prisma.user.findUnique({
       where: { id: user.id },
     });
     if (!chekedUser) throw new UserUnauthorizedException();

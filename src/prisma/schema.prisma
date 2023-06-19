@@ -12,7 +12,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model UserAuthData {
+model User {
   id                   String         @id @default(uuid())
   email                String         @unique
   password             String
@@ -21,7 +21,7 @@ model UserAuthData {
   activationKeyCreated DateTime       @default(now())
   // 
   userProfileId        String         @unique
-  userProfile          UserProfile    @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userProfile          Profile        @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   // 
   refreshTokens        RefreshToken[]
   // 
@@ -30,20 +30,20 @@ model UserAuthData {
 }
 
 model RefreshToken {
-  id             String        @id
-  expiresAt      DateTime
-  issuedAt       DateTime
-  UserAuthData   UserAuthData? @relation(fields: [userAuthDataId], references: [id])
-  userAuthDataId String?
+  id        String   @id
+  expiresAt DateTime
+  issuedAt  DateTime
+  User      User?    @relation(fields: [UserId], references: [id])
+  UserId    String?
 }
 
-model UserProfile {
-  id           String        @id @default(uuid())
-  name         String?
-  surname      String?
+model Profile {
+  id        String   @id @default(uuid())
+  name      String?
+  surname   String?
   // 
-  userAuthData UserAuthData?
+  User      User?
   // 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

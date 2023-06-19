@@ -9,5 +9,5 @@ export class RefreshTokenEntity implements RefreshToken {
   @Expose()
   issuedAt: Date;
   @Expose()
-  userAuthDataId: string;
+  UserId: string;
 }

@@ -1,4 +1,4 @@
-import { UserAuthData } from '@prisma/client';
+import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
@@ -24,7 +24,7 @@ export class AccessJwtService {
     this.publicJwk = await this.jwkService.getPublicJwk('access');
   }
 
-  public async signJwt(data: UserAuthData): Promise<string> {
+  public async signJwt(data: User): Promise<string> {
     const payload = plainToInstance(AccessJwtClaimsDTO, data, {
       strategy: 'excludeAll',
       exposeUnsetFields: false,

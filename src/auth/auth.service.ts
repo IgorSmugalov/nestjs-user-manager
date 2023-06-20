@@ -1,38 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { UserCredentialsDTO } from './dto/user-credentials.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { HashService } from 'src/crypto/hash.service';
 import {
   IncorrectCredentialsException,
-  UserAlreadyExiststException,
   UserUnauthorizedException,
 } from './auth.exceptions';
 import { Request, Response } from 'express';
 import { AccessJwtService } from './access-jwt.service';
 import { RefreshJwtService } from './refresh-jwt.service';
 import { RefreshJwtClaimsDTO } from './dto/refresh-jwt-claims.dto';
-import { ITokens } from './types';
+import { ITokensSet } from './types';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private hashService: HashService,
+    private readonly userService: UserService,
+    private readonly hashService: HashService,
     private readonly accessJwtService: AccessJwtService,
     private readonly refreshJwtService: RefreshJwtService,
   ) {}
 
-  public async registerUser(
-    userCredentials: UserCredentialsDTO,
-  ): Promise<ITokens> {
-    const { email, password } = userCredentials;
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    if (existingUser) throw new UserAlreadyExiststException();
-    const hashedPassword = await this.hashService.hashPassword(password);
-    const newUser = await this.prisma.user.create({
-      data: { email, password: hashedPassword, userProfile: { create: {} } },
+  public async registerUser({
+    email,
+    password,
+  }: UserCredentialsDTO): Promise<ITokensSet> {
+    password = await this.hashService.hashPassword(password);
+    const newUser = await this.userService.createUser({
+      email,
+      password,
     });
     const accessToken = await this.accessJwtService.signJwt(newUser);
     const refreshToken = await this.refreshJwtService.signJwt(newUser);
@@ -41,11 +37,9 @@ export class AuthService {
 
   public async authByCredentials(
     userCredentials: UserCredentialsDTO,
-  ): Promise<ITokens> {
+  ): Promise<ITokensSet> {
     const { email, password } = userCredentials;
-    const candidate = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const candidate = await this.userService.getUserByEmail({ email });
     if (!candidate) {
       throw new IncorrectCredentialsException();
     }
@@ -61,10 +55,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  public async authByRefreshToken(user: RefreshJwtClaimsDTO): Promise<ITokens> {
-    const chekedUser = await this.prisma.user.findUnique({
-      where: { id: user.id },
-    });
+  public async authByRefreshToken(
+    user: RefreshJwtClaimsDTO,
+  ): Promise<ITokensSet> {
+    const chekedUser = await this.userService.getUserById({ id: user.id });
     if (!chekedUser) throw new UserUnauthorizedException();
     const accessToken = await this.accessJwtService.signJwt(chekedUser);
     const refreshToken = await this.refreshJwtService.signJwt(chekedUser);
@@ -85,4 +79,8 @@ export class AuthService {
   public clearauthCookie(response: Response) {
     return response.clearCookie('refresh');
   }
+
+  // private getUserByEmail(email: string) {
+
+  // }
 }

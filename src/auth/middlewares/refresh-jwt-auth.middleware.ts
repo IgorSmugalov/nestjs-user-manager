@@ -15,7 +15,6 @@ export class RefreshJwtAuthMiddleware implements NestMiddleware {
     const refreshCookie = this.authService.getAuthCookie(req);
     if (!refreshCookie || !isJWT(refreshCookie)) return next();
     req.refreshedUser = await this.refreshJwtService.verifyJwt(refreshCookie);
-    // console.log(req.refreshedUser);
     return next();
   }
 }

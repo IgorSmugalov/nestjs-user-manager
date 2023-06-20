@@ -1,7 +1,7 @@
 import { User } from '@prisma/client';
 import { RegisteredJwtClaims } from '../dto/registered-jwt-claims.dto';
 
-export interface ITokens {
+export interface ITokensSet {
   accessToken: string;
   refreshToken: string;
 }

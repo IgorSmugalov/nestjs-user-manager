@@ -1,8 +1,7 @@
 import { PickType } from '@nestjs/swagger';
-import { UserEntity } from '../entities/user-auth-data.entity';
-import { IsEmail, IsStrongPassword } from 'class-validator';
+import { CreateUserDTO } from 'src/user/dto/create-user.dto';
 
-export class UserCredentialsDTO extends PickType(UserEntity, [
+export class UserCredentialsDTO extends PickType(CreateUserDTO, [
   'email',
   'password',
 ]) {}

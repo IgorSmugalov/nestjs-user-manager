@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 export type RegisteredJwtClaims = Required<
   Pick<JWTPayload, 'exp' | 'jti' | 'iat'>
 >;
-
 export class RegisteredJwtClaimsDTO implements RegisteredJwtClaims {
   @ApiProperty()
   @Expose()
@@ -17,10 +16,10 @@ export class RegisteredJwtClaimsDTO implements RegisteredJwtClaims {
   @ApiProperty()
   @Expose()
   @IsNumber()
-  exp: number;
+  iat: number = Math.round(Date.now() / 1000);
 
   @ApiProperty()
   @Expose()
   @IsNumber()
-  iat: number;
+  exp: number;
 }

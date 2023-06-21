@@ -10,6 +10,7 @@ async function bootstrap() {
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
   buildSwagger(app);
+  // useContainer(app.select(AppModule), { fallback: true });
   await app.listen(3000);
 }
 

@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
 import { KeyLike, SignJWT, jwtVerify } from 'jose';
-import { plainToInstance } from 'class-transformer';
 import { JWT_CONFIG } from 'src/config';
 import { IJwtSetConfig } from 'src/config/jwt.config';
 import { AccessJwtClaimsDTO } from './dto/access-jwt-claims.dto';
@@ -25,23 +24,17 @@ export class AccessJwtService {
   }
 
   public async signJwt(data: User): Promise<string> {
-    const payload = plainToInstance(AccessJwtClaimsDTO, data, {
-      strategy: 'excludeAll',
-      exposeUnsetFields: false,
-    });
-    payload.iat = Math.round(Date.now() / 1000);
-    payload.exp = payload.iat + this.config.expiresAfter;
-    const token = new SignJWT({ ...payload })
+    const claims = AccessJwtClaimsDTO.fromUser(data);
+    return await new SignJWT({ ...claims })
+      .setExpirationTime(claims.iat + this.config.expiresAfter)
       .setProtectedHeader({ alg: this.config.algorithm })
       .sign(this.privateJwk);
-    return await token;
   }
 
   public async verifyJwt(token: string): Promise<AccessJwtClaimsDTO | null> {
     try {
       const { payload } = await jwtVerify(token, this.publicJwk);
-      const decodedPayload = plainToInstance(AccessJwtClaimsDTO, payload);
-      return decodedPayload;
+      return AccessJwtClaimsDTO.fromToken(payload);
     } catch {
       return null;
     }

@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
 import { KeyLike, SignJWT, jwtVerify } from 'jose';
-import { plainToInstance } from 'class-transformer';
 import { JWT_CONFIG } from 'src/config';
 import { IJwtSetConfig } from 'src/config/jwt.config';
 import { RefreshJwtClaimsDTO } from './dto/refresh-jwt-claims.dto';
@@ -28,24 +27,19 @@ export class RefreshJwtService {
   }
 
   public async signJwt(data: User): Promise<string> {
-    const payload = plainToInstance(RefreshJwtClaimsDTO, data, {
-      strategy: 'excludeAll',
-      exposeUnsetFields: false,
-    });
-    payload.iat = Math.round(Date.now() / 1000);
-    payload.exp = payload.iat + this.config.expiresAfter;
-    const token = new SignJWT({ ...payload })
+    const claims = RefreshJwtClaimsDTO.fromUser(data);
+    claims.exp = claims.iat + this.config.expiresAfter;
+    await this.addJwtToWhitelist(claims);
+    await this.limitateJwtsCountForUser(claims.id);
+    return await new SignJWT({ ...claims })
       .setProtectedHeader({ alg: this.config.algorithm })
       .sign(this.privateJwk);
-    await this.addJwtToWhitelist(payload);
-    await this.limitateJwtsCountForUser(payload.id);
-    return await token;
   }
 
   public async verifyJwt(token: string): Promise<RefreshJwtClaimsDTO | null> {
     try {
       const { payload } = await jwtVerify(token, this.publicJwk);
-      const decodedPayload = plainToInstance(RefreshJwtClaimsDTO, payload);
+      const decodedPayload = RefreshJwtClaimsDTO.fromToken(payload);
       await validateOrReject(decodedPayload);
       const wasWhitelisted = await this.removeJwtFromWhitelist(decodedPayload);
       if (!wasWhitelisted) return null;

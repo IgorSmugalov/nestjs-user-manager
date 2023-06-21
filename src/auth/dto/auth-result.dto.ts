@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { ITokensSet } from '../types';
 
-export class AuthResultDTO {
+export class AuthResponseDTO {
   constructor(data: ITokensSet) {
-    Object.assign(this, data);
+    this.accessToken = data.accessToken;
   }
   @Expose()
   @ApiProperty()
-  accessToken: string;
+  public readonly accessToken: string;
 }

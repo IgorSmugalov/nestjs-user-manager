@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { ProfileIdDTO } from './dto/params.dto';
@@ -14,7 +14,6 @@ export class ProfileController {
   @Get(':id')
   @ApiParam({ type: ProfileIdDTO, name: 'id' })
   async findOne(@Param() dto: ProfileIdDTO) {
-    console.log(dto);
     return await this.profileService.getById(dto);
   }
 
@@ -24,8 +23,14 @@ export class ProfileController {
   @ApiParam({ type: ProfileIdDTO, name: 'id' })
   async update(
     @Param() idDto: ProfileIdDTO,
-    @Body() updateProfileDto: UpdateProfileDTO,
+    @Body() updateDto: UpdateProfileDTO,
   ) {
-    return await this.profileService.update(updateProfileDto, idDto);
+    return await this.profileService.update(updateDto, idDto);
+  }
+
+  @Delete(':id/avatar')
+  @ApiParam({ type: ProfileIdDTO, name: 'id' })
+  async deleteAvatar(@Param() idDto: ProfileIdDTO) {
+    return await this.profileService.deleteAvatar(idDto);
   }
 }

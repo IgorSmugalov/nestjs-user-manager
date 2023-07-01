@@ -1,6 +1,6 @@
 import { UseInterceptors, applyDecorators } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AvatarInterceptor } from '../avatar.interceptor';
+import { AvatarInterceptor } from '../interceptors/avatar.interceptor';
 import { ApiConsumes } from '@nestjs/swagger';
 
 export function ParseProfileFormData() {

@@ -11,10 +11,12 @@ import { UserModule } from './user/user.module';
 import { ProfileModule } from './profile/profile.module';
 import { MaxFileSizeConstraint } from './utils/validation/maxFileSize.validator';
 import { IsImageBufferConstraint } from './utils/validation/isImage';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
     ConfigModule,
+    AssetsModule,
     PrismaModule,
     AuthModule,
     CryptoModule,

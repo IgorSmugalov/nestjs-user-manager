@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { ProfileService } from './profile.service';
+import { ProfileService } from '../profile.service';
 
 @Injectable()
 export class AvatarInterceptor implements NestInterceptor {

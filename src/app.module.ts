@@ -8,15 +8,27 @@ import { RefreshJwtAuthMiddleware } from './auth/middlewares/refresh-jwt-auth.mi
 import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './utils/exception/global-exception.filter';
 import { UserModule } from './user/user.module';
+import { ProfileModule } from './profile/profile.module';
+import { MaxFileSizeConstraint } from './utils/validation/maxFileSize.validator';
+import { IsImageBufferConstraint } from './utils/validation/isImage';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, AuthModule, CryptoModule, UserModule],
+  imports: [
+    ConfigModule,
+    PrismaModule,
+    AuthModule,
+    CryptoModule,
+    UserModule,
+    ProfileModule,
+  ],
   controllers: [],
   providers: [
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
+    IsImageBufferConstraint,
+    MaxFileSizeConstraint,
   ],
 })
 export class AppModule {

@@ -1,7 +1,19 @@
 import { registerAs } from '@nestjs/config';
 import { JWK_CONFIG } from '.';
 
-export const jwkConfig = registerAs(JWK_CONFIG, () => ({
+export interface IJwkConfig {
+  algorithm: string;
+  privatePemFile: string;
+  publicPemFile: string;
+}
+
+export interface IJwkSetConfig {
+  dir: string;
+  accessJwkConfig: IJwkConfig;
+  refreshJwkConfig: IJwkConfig;
+}
+
+export const jwkConfig = registerAs<IJwkSetConfig>(JWK_CONFIG, () => ({
   dir: process.env.JWK_KEYS_DIR,
   accessJwkConfig: {
     algorithm: process.env.JWK_ACCESS_KEY_ALGORITHM,
@@ -14,5 +26,3 @@ export const jwkConfig = registerAs(JWK_CONFIG, () => ({
     publicPemFile: process.env.JWK_REFRESH_PUBLIC_KEY_FILE,
   },
 }));
-
-export type jwkConfig = ReturnType<typeof jwkConfig>;

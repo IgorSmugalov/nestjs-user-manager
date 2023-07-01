@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { JWK_CONFIG } from 'src/config';
-import { jwkConfig } from 'src/config/jwk.config';
 import { JwkSetType } from './types';
 import {
   exportPKCS8,
@@ -12,10 +11,11 @@ import {
   importPKCS8,
   importSPKI,
 } from 'jose';
+import { IJwkSetConfig } from 'src/config/jwk.config';
 
 @Injectable()
 export class JwkService {
-  private readonly config = this.configService.get<jwkConfig>(JWK_CONFIG);
+  private readonly config = this.configService.get<IJwkSetConfig>(JWK_CONFIG);
   private readonly logger = new Logger(JwkService.name);
   constructor(private readonly configService: ConfigService) {}
 

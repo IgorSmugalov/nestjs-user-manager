@@ -1,26 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '@prisma/client';
-import { Expose } from 'class-transformer';
+import { Expose, TransformPlainToInstance } from 'class-transformer';
 import {
-  Allow,
   IsBoolean,
+  IsDate,
   IsEmail,
+  IsString,
   IsStrongPassword,
   IsUUID,
 } from 'class-validator';
-export class UserEntity implements User {
+
+export class UserDTO implements User {
   @Expose()
-  @ApiProperty()
   @IsUUID(4)
+  @ApiProperty()
   id: string;
 
   @Expose()
-  @ApiProperty()
   @IsEmail()
+  @ApiProperty()
   email: string;
 
   @Expose()
-  @ApiProperty()
   @IsStrongPassword({
     minLength: 8,
     minUppercase: 1,
@@ -28,35 +29,43 @@ export class UserEntity implements User {
     minLowercase: 1,
     minSymbols: 0,
   })
+  @ApiProperty()
   password: string;
 
   @Expose()
-  @ApiProperty()
   @IsBoolean()
+  @ApiProperty()
   activated: boolean;
 
   @Expose()
+  @IsString()
   @ApiProperty()
-  @IsUUID(4)
   activationKey: string;
 
   @Expose()
+  @IsDate()
   @ApiProperty()
-  @Allow()
   activationKeyCreated: Date;
 
   @Expose()
+  @IsString()
   @ApiProperty()
-  @IsUUID(4)
   userProfileId: string;
 
   @Expose()
+  @IsDate()
   @ApiProperty()
-  @Allow()
   createdAt: Date;
 
   @Expose()
+  @IsDate()
   @ApiProperty()
-  @Allow()
   updatedAt: Date;
+
+  @TransformPlainToInstance(UserDTO, {
+    strategy: 'excludeAll',
+  })
+  static fromPrisma(profile: User): UserDTO {
+    return profile;
+  }
 }

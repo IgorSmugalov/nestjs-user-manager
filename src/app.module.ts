@@ -9,7 +9,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './utils/exception/global-exception.filter';
 import { UserModule } from './user/user.module';
 import { ProfileModule } from './profile/profile.module';
-import { MaxFileSizeConstraint } from './utils/validation/maxFileSize.validator';
+import { MaxFileSizeConstraint } from './utils/validation/max-file-size.validator';
 import { IsImageBufferConstraint } from './utils/validation/isImage';
 import { AssetsModule } from './assets/assets.module';
 

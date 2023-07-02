@@ -1,37 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDTO } from './dto/create-user.dto';
-import { UserEmailDTO, UserIdDTO } from './dto/param.dto';
-import { Prisma, User } from '@prisma/client';
+import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
+import { Prisma } from '@prisma/client';
 import {
-  UserAlreadyExiststException,
-  UserCreationException,
+  UserAlreadyExistsException,
+  UserDoesNotExistsException,
 } from './user.exceptions';
+import { UserDTO } from './dto/user.dto';
+import { IGetUserOptions, IUserService } from './types';
 
 @Injectable()
-export class UserService {
+export class UserService implements IUserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async createUser(dto: CreateUserDTO): Promise<User | never> {
-    try {
-      return await this.prisma.user.create({
-        data: { ...dto, userProfile: { create: {} } },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      )
-        throw new UserAlreadyExiststException();
-      throw new UserCreationException();
-    }
+  public async createUserAndProfile(
+    dto: CreateUserAndProfileDTO,
+  ): Promise<UserDTO> {
+    await this.getUser({ email: dto.email }, { throwOnFound: true });
+    const user = await this.prisma.user.create({
+      data: dto.createUserAndProfileInput(),
+    });
+    return UserDTO.fromPrisma(user);
   }
 
-  public async getUserById(id: UserIdDTO): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: id });
+  public async getUser(
+    input: Prisma.UserWhereUniqueInput,
+    options?: IGetUserOptions,
+  ): Promise<UserDTO> {
+    const user = await this.prisma.user.findUnique({
+      where: this.userUniqueInput(input),
+    });
+    if (options?.throwOnFound && user) throw new UserAlreadyExistsException();
+    if (options?.throwOnNotFound && !user)
+      throw new UserDoesNotExistsException();
+    return UserDTO.fromPrisma(user);
   }
 
-  public async getUserByEmail(email: UserEmailDTO): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: email });
+  private userUniqueInput(input: Prisma.UserWhereUniqueInput) {
+    const { id, email, activationKey, userProfileId } = input;
+    return Prisma.validator<Prisma.UserWhereUniqueInput>()({
+      email,
+      id,
+      activationKey,
+      userProfileId,
+    });
   }
 }

@@ -1,20 +1,18 @@
-import {
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 export enum UserExceptionMessages {
-  userAlreadyExistst = 'Пользователь с таким email уже существует',
+  userAlreadyExistst = 'Пользователь уже существует',
+  userDoesNotExistst = 'Пользователь не существует',
 }
 
-export class UserCreationException extends InternalServerErrorException {
+export class UserAlreadyExistsException extends BadRequestException {
   constructor() {
-    super('Server error');
+    super(UserExceptionMessages.userAlreadyExistst);
   }
 }
 
-export class UserAlreadyExiststException extends BadRequestException {
+export class UserDoesNotExistsException extends BadRequestException {
   constructor() {
-    super(UserExceptionMessages.userAlreadyExistst);
+    super(UserExceptionMessages.userDoesNotExistst);
   }
 }

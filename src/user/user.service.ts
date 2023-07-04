@@ -24,11 +24,11 @@ export class UserService implements IUserService {
   }
 
   public async getUser(
-    input: Prisma.UserWhereUniqueInput,
+    dto: Prisma.UserWhereUniqueInput,
     options?: IGetUserOptions,
   ): Promise<UserDTO> {
     const user = await this.prisma.user.findUnique({
-      where: this.userUniqueInput(input),
+      where: this.userUniqueInput(dto),
     });
     if (options?.throwOnFound && user) throw new UserAlreadyExistsException();
     if (options?.throwOnNotFound && !user)

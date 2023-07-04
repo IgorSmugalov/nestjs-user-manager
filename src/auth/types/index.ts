@@ -1,22 +1,48 @@
-import { User } from '@prisma/client';
-import { RegisteredJwtClaims } from '../dto/registered-jwt-claims.dto';
+import { Prisma, Profile } from '@prisma/client';
+import { RegisteredJwtClaims } from '../dto/jwt-claims-registered.dto';
 
-export interface ITokensSet {
+export interface Tokens {
   accessToken: string;
   refreshToken: string;
 }
 
-type AccessJwtRegisteredClaims = Pick<RegisteredJwtClaims, 'exp' | 'iat'>;
-type AccessJwtAuthClaims = Pick<
-  User,
-  'id' | 'userProfileId' | 'activated' | 'updatedAt'
->;
-export type AccessJwtClaims = AccessJwtRegisteredClaims & AccessJwtAuthClaims;
+// Access Jwt
 
-type RefreshJwtRegisteredClaims = Pick<
-  RegisteredJwtClaims,
-  'exp' | 'jti' | 'iat'
->;
-type RefreshJwtAuthClaims = Pick<User, 'id' | 'updatedAt'>;
-export type RefreshJwtClaims = RefreshJwtRegisteredClaims &
-  RefreshJwtAuthClaims;
+type AccessRegisteredClaims = Pick<RegisteredJwtClaims, 'exp' | 'iat'>;
+
+type AccessCustomClaims = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    activated: true;
+    userProfile: { select: { name: true; surname: true; id: true } };
+  };
+}>;
+
+export type AccessJwtClaims = AccessRegisteredClaims & AccessCustomClaims;
+
+// Refresh Jwt
+
+type RefreshRegisteredClaims = Pick<RegisteredJwtClaims, 'exp' | 'jti' | 'iat'>;
+
+type RefreshCustomClaims = Prisma.UserGetPayload<{
+  select: { id: true };
+}>;
+
+export type RefreshJwtClaims = RefreshRegisteredClaims & RefreshCustomClaims;
+
+export type AuthResponseUserPart = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    email: true;
+    activated: true;
+    createdAt: true;
+    updatedAt: true;
+    userProfileId: true;
+  };
+}>;
+
+export type AuthResult = {
+  user: AuthResponseUserPart;
+  profile: Profile;
+  tokens: Tokens;
+};

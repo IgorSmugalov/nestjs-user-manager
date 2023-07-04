@@ -1,63 +1,61 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserCredentialsDTO } from './dto/user-credentials.dto';
-import { AuthResponseDTO } from './dto/auth-result.dto';
+import { CredentialsDTO } from './dto/credentials.dto';
 import { Response } from 'express';
 import { UseRequestValidation } from 'src/utils/validation/use-request-validation.decorator';
 import { UseRefreshJwtGuard } from './decorators/use-refresh-jwt-guard.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
-import { RefreshJwtClaimsDTO } from './dto/refresh-jwt-claims.dto';
+import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { CreateUserAndProfileDTO } from 'src/user/dto/create-user-and-profile.dto';
+import { TokensDTO } from './dto/auth-data.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
 @UseRequestValidation()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly auth: AuthService) {}
 
   @Post('register')
-  @ApiBody({ type: UserCredentialsDTO })
-  @ApiCreatedResponse({ type: AuthResponseDTO })
-  async registerUser(
-    @Body() userCredentialsDTO: UserCredentialsDTO,
+  @ApiBody({ type: CreateUserAndProfileDTO })
+  @ApiCreatedResponse({ type: TokensDTO })
+  async register(
+    @Body() userCredentialsDTO: CreateUserAndProfileDTO,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDTO> {
-    const tokens = await this.authService.registerUser(userCredentialsDTO);
-    this.authService.setAuthCookie(res, tokens.refreshToken);
-    return new AuthResponseDTO(tokens);
+  ): Promise<TokensDTO> {
+    const authResult = await this.auth.registerUser(userCredentialsDTO);
+    this.auth.setAuthCookie(res, authResult.refreshToken);
+    return authResult;
   }
 
   @Post('login')
-  @ApiBody({ type: UserCredentialsDTO })
-  @ApiCreatedResponse({ type: AuthResponseDTO })
-  async loginUser(
-    @Body() userCredentialsDTO: UserCredentialsDTO,
+  @ApiBody({ type: CredentialsDTO })
+  @ApiCreatedResponse({ type: TokensDTO })
+  async login(
+    @Body() userCredentialsDTO: CredentialsDTO,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDTO> {
-    const tokens = await this.authService.authByCredentials(userCredentialsDTO);
-    this.authService.setAuthCookie(res, tokens.refreshToken);
-    return new AuthResponseDTO(tokens);
+  ) {
+    const tokens = await this.auth.authByCredentials(userCredentialsDTO);
+    this.auth.setAuthCookie(res, tokens.refreshToken);
+    return new TokensDTO(tokens);
   }
 
   @Post('refresh')
   @UseRefreshJwtGuard()
-  @ApiCreatedResponse({ type: AuthResponseDTO })
-  async refreshTokens(
+  @ApiCreatedResponse({ type: TokensDTO })
+  async refresh(
     @RefreshedUser() user: RefreshJwtClaimsDTO,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDTO> {
-    const tokens = await this.authService.authByRefreshToken(user);
-    this.authService.setAuthCookie(res, tokens.refreshToken);
-    return new AuthResponseDTO(tokens);
+  ) {
+    const authResult = await this.auth.authByRefreshToken(user);
+    this.auth.setAuthCookie(res, authResult.refreshToken);
+    return authResult;
   }
 
   @Post('logout')
   @UseRefreshJwtGuard()
-  async logout(
-    @RefreshedUser() user: RefreshJwtClaimsDTO,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    this.authService.clearauthCookie(res);
+  async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
+    this.auth.clearAuthCookie(res);
     return;
   }
 }

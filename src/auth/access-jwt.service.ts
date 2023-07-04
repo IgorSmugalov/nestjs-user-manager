@@ -1,11 +1,11 @@
-import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
 import { KeyLike, SignJWT, jwtVerify } from 'jose';
 import { JWT_CONFIG } from 'src/config';
 import { IJwtSetConfig } from 'src/config/jwt.config';
-import { AccessJwtClaimsDTO } from './dto/access-jwt-claims.dto';
+import { AccessJwtClaimsDTO } from './dto/jwt-claims-access.dto';
+import { Profile, User } from '@prisma/client';
 
 @Injectable()
 export class AccessJwtService {
@@ -23,8 +23,8 @@ export class AccessJwtService {
     this.publicJwk = await this.jwkService.getPublicJwk('access');
   }
 
-  public async signJwt(data: User): Promise<string> {
-    const claims = AccessJwtClaimsDTO.fromUser(data);
+  public async signJwt(user: User, profile: Profile): Promise<string> {
+    const claims = AccessJwtClaimsDTO.fromUser(user, profile);
     return await new SignJWT({ ...claims })
       .setExpirationTime(claims.iat + this.config.expiresAfter)
       .setProtectedHeader({ alg: this.config.algorithm })

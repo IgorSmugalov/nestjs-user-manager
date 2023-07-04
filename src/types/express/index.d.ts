@@ -1,5 +1,5 @@
-import { AccessJwtClaimsDTO } from 'src/auth/dto/access-jwt-claims.dto';
-import { RefreshJwtClaimsDTO } from 'src/auth/dto/refresh-jwt-claims.dto';
+import { AccessJwtClaimsDTO } from 'src/auth/dto/jwt-claims-access.dto';
+import { RefreshJwtClaimsDTO } from 'src/auth/dto/jwt-claims-refresh.dto';
 
 export {};
 

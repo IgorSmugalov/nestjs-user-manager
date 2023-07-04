@@ -18,7 +18,7 @@ export class AssetsService {
     });
   }
 
-  public async uploadAvatar(file: Buffer, fileName: string): Promise<string> {
+  public async saveAvatar(file: Buffer, fileName: string): Promise<string> {
     const filename = fileName + '.jpg';
     await sharp(file)
       .jpeg()

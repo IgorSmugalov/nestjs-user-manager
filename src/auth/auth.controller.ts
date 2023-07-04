@@ -3,22 +3,28 @@ import { AuthService } from './auth.service';
 import { CredentialsDTO } from './dto/credentials.dto';
 import { Response } from 'express';
 import { UseRequestValidation } from 'src/utils/validation/use-request-validation.decorator';
-import { UseRefreshJwtGuard } from './decorators/use-refresh-jwt-guard.decorator';
+import { RefreshedAccess } from './decorators/refreshed-access.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserAndProfileDTO } from 'src/user/dto/create-user-and-profile.dto';
 import { TokensDTO } from './dto/auth-data.dto';
+import { OnlyPublicAccess } from './decorators/public-access.decorator';
+import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import { UserAlreadyExistsException } from 'src/user/user.exceptions';
+import { IncorrectCredentialsException } from './auth.exceptions';
 
 @Controller('auth')
 @ApiTags('Auth')
-@UseRequestValidation()
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @OnlyPublicAccess()
+  @UseRequestValidation()
   @ApiBody({ type: CreateUserAndProfileDTO })
   @ApiCreatedResponse({ type: TokensDTO })
+  @ApiException(() => UserAlreadyExistsException)
   async register(
     @Body() userCredentialsDTO: CreateUserAndProfileDTO,
     @Res({ passthrough: true }) res: Response,
@@ -29,8 +35,11 @@ export class AuthController {
   }
 
   @Post('login')
+  @OnlyPublicAccess()
+  @UseRequestValidation()
   @ApiBody({ type: CredentialsDTO })
   @ApiCreatedResponse({ type: TokensDTO })
+  @ApiException(() => IncorrectCredentialsException)
   async login(
     @Body() userCredentialsDTO: CredentialsDTO,
     @Res({ passthrough: true }) res: Response,
@@ -41,7 +50,8 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @UseRefreshJwtGuard()
+  @RefreshedAccess()
+  @UseRequestValidation()
   @ApiCreatedResponse({ type: TokensDTO })
   async refresh(
     @RefreshedUser() user: RefreshJwtClaimsDTO,
@@ -53,9 +63,14 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseRefreshJwtGuard()
-  async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
+  @RefreshedAccess()
+  @UseRequestValidation()
+  async logout(
+    @RefreshedUser() user: RefreshJwtClaimsDTO,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<any> {
     this.auth.clearAuthCookie(res);
-    return;
+    await this.auth.logout(user);
+    return 'ok';
   }
 }

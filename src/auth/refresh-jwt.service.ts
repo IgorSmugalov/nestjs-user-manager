@@ -41,7 +41,7 @@ export class RefreshJwtService {
       const { payload } = await jwtVerify(token, this.publicJwk);
       const decodedPayload = RefreshJwtClaimsDTO.fromToken(payload);
       await validateOrReject(decodedPayload);
-      const wasWhitelisted = await this.removeJwtFromWhitelist(decodedPayload);
+      const wasWhitelisted = await this.isJwtInWhitelist(decodedPayload);
       if (!wasWhitelisted) return null;
       return decodedPayload;
     } catch {
@@ -58,6 +58,13 @@ export class RefreshJwtService {
         UserId: claims.id,
       },
     });
+  }
+
+  public async isJwtInWhitelist(claims: RefreshJwtClaimsDTO): Promise<boolean> {
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { id: claims.jti },
+    });
+    return Boolean(token);
   }
 
   public async removeJwtFromWhitelist(

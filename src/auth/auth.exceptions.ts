@@ -5,6 +5,7 @@ export enum AuthExceptionMessages {
   forbiddenDefaultMessage = 'Доступ запрещён',
   incorrectCredentials = 'Неверный логин или пароль',
   userUnactivatedOrBlocked = 'Пользователь не активирован или заблокирован',
+  userAlreadyAuthorized = 'Пользователь уже авторизован',
 }
 
 export class IncorrectCredentialsException extends UnauthorizedException {
@@ -16,6 +17,12 @@ export class IncorrectCredentialsException extends UnauthorizedException {
 export class UserUnauthorizedException extends UnauthorizedException {
   constructor() {
     super(AuthExceptionMessages.unauthorizedDefaultMessage);
+  }
+}
+
+export class UserAlreadyAuthorizedException extends ForbiddenException {
+  constructor() {
+    super(AuthExceptionMessages.userAlreadyAuthorized);
   }
 }
 

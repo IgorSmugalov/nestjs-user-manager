@@ -1,3 +1,4 @@
+import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import {
   applyDecorators,
   BadRequestException,
@@ -29,6 +30,10 @@ export const UseRequestValidation = (): MethodDecorator & ClassDecorator =>
         stopAtFirstError: true,
       }),
     ),
+    ApiException(() => ValidationException, {
+      isArray: true,
+      type: () => ExceptionMessage,
+    }),
   );
 
 export class ExceptionMessage implements IExceptionMessage {

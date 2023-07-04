@@ -12,7 +12,7 @@ export class AssetsService {
   constructor(private readonly configService: ConfigService) {}
   private readonly config = this.configService.get<IPathConfig>(PATH_CONFIG);
 
-  private async onModuleInit() {
+  async onModuleInit() {
     await mkdir(join(path, this.config.assetsPath, this.config.avatarDir), {
       recursive: true,
     });

@@ -66,13 +66,18 @@ export class AuthService {
     const profile = await this.profileService.getProfile({
       id: chekedUser.userProfileId,
     });
-
+    await this.refreshJwtService.removeJwtFromWhitelist(user);
     const accessToken = await this.accessJwtService.signJwt(
       chekedUser,
       profile,
     );
     const refreshToken = await this.refreshJwtService.signJwt(chekedUser);
     return new TokensDTO({ accessToken, refreshToken });
+  }
+
+  public async logout(user: RefreshJwtClaimsDTO) {
+    await this.refreshJwtService.removeJwtFromWhitelist(user);
+    return;
   }
 
   public setAuthCookie(response: Response, refreshToken: string) {

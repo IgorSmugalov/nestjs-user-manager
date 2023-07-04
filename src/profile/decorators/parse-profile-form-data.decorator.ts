@@ -5,7 +5,10 @@ import { ApiConsumes } from '@nestjs/swagger';
 
 export function ParseProfileFormData() {
   return applyDecorators(
-    UseInterceptors(FileInterceptor('avatar'), AvatarInterceptor),
+    UseInterceptors(
+      FileInterceptor('avatar', { limits: { fileSize: 1024 * 1024 * 10 } }),
+      AvatarInterceptor,
+    ),
     ApiConsumes('multipart/form-data'),
   );
 }

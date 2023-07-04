@@ -1,11 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { PickType as PT } from '@nestjs/swagger';
 import { ProfileId } from '../types';
-import { Expose } from 'class-transformer';
-import { IsUUID } from 'class-validator';
+import { ProfileDTO } from './profile.dto';
 
-export class ProfileIdDTO implements ProfileId {
-  @IsUUID(4)
-  @Expose()
-  @ApiProperty()
-  id: string;
-}
+export class ProfileIdDTO extends PT(ProfileDTO, ['id']) implements ProfileId {}

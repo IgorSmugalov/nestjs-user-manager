@@ -8,5 +8,6 @@ import { AssetsModule } from 'src/assets/assets.module';
   controllers: [ProfileController],
   providers: [ProfileService],
   imports: [PrismaModule, AssetsModule],
+  exports: [ProfileService],
 })
 export class ProfileModule {}

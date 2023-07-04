@@ -1,10 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProfileIdDTO } from './dto/params.dto';
 import { AssetsService } from 'src/assets/assets.service';
 import { IGetByIdOptions, IProfileService } from './types';
-import { ProfileEntity } from './entities/profile.entity';
+import { ProfileDTO } from './dto/profile.dto';
+import {
+  AvatarDoesNotExistException,
+  ProfileAlreadyNotExistException,
+  ProfileDoesNotExistException,
+} from './profile.exceptions';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProfileService implements IProfileService {
@@ -13,41 +19,49 @@ export class ProfileService implements IProfileService {
     private readonly assetsService: AssetsService,
   ) {}
 
-  public async getById(dto: ProfileIdDTO, options?: IGetByIdOptions) {
+  public async getProfile(
+    input: Prisma.ProfileWhereUniqueInput,
+    options?: IGetByIdOptions,
+  ) {
     const profile = await this.prisma.profile.findUnique({
-      where: { id: dto.id },
+      where: this.profileUniqueInput(input),
     });
     if (!profile && options?.throwOnNotFound)
-      throw new BadRequestException('Profile not exists'); //TODO: Rework Exception
+      throw new ProfileDoesNotExistException();
     if (profile && options?.throwOnFound)
-      throw new BadRequestException('Profile already exists'); //TODO: Rework Exception
-    return ProfileEntity.fromPrisma(profile, this.assetsService);
+      throw new ProfileAlreadyNotExistException();
+    return ProfileDTO.fromPrisma(profile, this.assetsService);
   }
 
   public async update(updateDto: UpdateProfileDTO, dtoId: ProfileIdDTO) {
-    const { id } = await this.getById(dtoId, { throwOnNotFound: true });
-    let avatar: string | undefined;
+    await this.getProfile(dtoId, { throwOnNotFound: true });
     if (updateDto.avatar) {
-      avatar = await this.assetsService.uploadAvatar(
+      updateDto.path = await this.assetsService.saveAvatar(
         updateDto.avatar.buffer,
-        id,
+        dtoId.id,
       );
     }
-    const profile = await this.prisma.profile.update({
-      where: { id },
-      data: { ...updateDto, avatar },
-    });
-    return ProfileEntity.fromPrisma(profile, this.assetsService);
+    const profile = await this.prisma.profile.update(
+      updateDto.updateProfileInput(dtoId.id),
+    );
+    return ProfileDTO.fromPrisma(profile, this.assetsService);
   }
 
   public async deleteAvatar(dto: ProfileIdDTO) {
-    const { avatar } = await this.getById(dto, { throwOnNotFound: true });
-    if (!avatar) throw new BadRequestException('User does not have avatar'); //TODO: Rework Exception
+    const { avatar } = await this.getProfile(dto, { throwOnNotFound: true });
+    if (!avatar) throw new AvatarDoesNotExistException();
     await this.assetsService.deleteAvatar(avatar);
     const profile = await this.prisma.profile.update({
       where: { id: dto.id },
       data: { avatar: null },
     });
-    return ProfileEntity.fromPrisma(profile, this.assetsService);
+    return ProfileDTO.fromPrisma(profile, this.assetsService);
+  }
+
+  private profileUniqueInput(input: Prisma.ProfileWhereUniqueInput) {
+    const { id } = input;
+    return Prisma.validator<Prisma.UserWhereUniqueInput>()({
+      id,
+    });
   }
 }

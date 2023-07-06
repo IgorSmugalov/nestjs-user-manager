@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from 'src/crypto/jwk.service';
 import { KeyLike, SignJWT, jwtVerify } from 'jose';
-import { JWT_CONFIG } from 'src/config';
+import { JWT_CONFIG } from 'src/config/const';
 import { IJwtSetConfig } from 'src/config/jwt.config';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { PrismaService } from 'src/prisma/prisma.service';

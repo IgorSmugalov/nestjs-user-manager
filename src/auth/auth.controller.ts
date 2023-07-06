@@ -7,32 +7,15 @@ import { RefreshedAccess } from './decorators/refreshed-access.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { CreateUserAndProfileDTO } from 'src/user/dto/create-user-and-profile.dto';
 import { TokensDTO } from './dto/auth-data.dto';
 import { OnlyPublicAccess } from './decorators/public-access.decorator';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { UserAlreadyExistsException } from 'src/user/user.exceptions';
 import { IncorrectCredentialsException } from './auth.exceptions';
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
-
-  @Post('register')
-  @OnlyPublicAccess()
-  @UseRequestValidation()
-  @ApiBody({ type: CreateUserAndProfileDTO })
-  @ApiCreatedResponse({ type: TokensDTO })
-  @ApiException(() => UserAlreadyExistsException)
-  async register(
-    @Body() userCredentialsDTO: CreateUserAndProfileDTO,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<TokensDTO> {
-    const authResult = await this.auth.registerUser(userCredentialsDTO);
-    this.auth.setAuthCookie(res, authResult.refreshToken);
-    return authResult;
-  }
 
   @Post('login')
   @OnlyPublicAccess()

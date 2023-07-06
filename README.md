@@ -34,10 +34,20 @@ $ npx prisma generate
 
 - **Doc**: [http://localhost:3000/api](http://localhost:3000/api)
 
+## Mails
+
+- **Doc**: [http://localhost:3001](http://localhost:3001)
+
 ## Postgres:
 
 - `localhost:5432`
 - **Username:** postgres
+- **Password:** password
+
+## SMTP:
+
+- `localhost:25`
+- **Username:** user
 - **Password:** password
 
 ## PgAdmin:

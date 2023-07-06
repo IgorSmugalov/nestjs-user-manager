@@ -5,7 +5,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 import { ValidationError } from 'class-validator';
 
 const exceptionFactory = (err: ValidationError[]) => {
@@ -31,9 +31,11 @@ export const UseRequestValidation = (): MethodDecorator & ClassDecorator =>
       }),
     ),
     ApiException(() => ValidationException, {
-      isArray: true,
+      messageSchema: { $ref: getSchemaPath(ExceptionMessage) },
       type: () => ExceptionMessage,
+      isArray: true,
     }),
+    ApiExtraModels(ExceptionMessage),
   );
 
 export class ExceptionMessage implements IExceptionMessage {

@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { JWK_CONFIG } from '.';
+import { JWK_CONFIG } from './const';
 
 export interface IJwkConfig {
   algorithm: string;

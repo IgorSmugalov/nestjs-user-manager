@@ -11,6 +11,7 @@ import { ProfileModule } from './profile/profile.module';
 import { MaxFileSizeConstraint } from './utils/validation/max-file-size.validator';
 import { IsImageBufferConstraint } from './utils/validation/isImage';
 import { AssetsModule } from './assets/assets.module';
+import { MailerModule } from './mailer/mailer.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AssetsModule } from './assets/assets.module';
     CryptoModule,
     UserModule,
     ProfileModule,
+    MailerModule,
   ],
   controllers: [],
   providers: [

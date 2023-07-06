@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { JWT_CONFIG } from '.';
+import { JWT_CONFIG } from './const';
 
 export interface IJwtConfig {
   algorithm: string;

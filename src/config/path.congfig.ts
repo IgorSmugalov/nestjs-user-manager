@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { PATH_CONFIG } from '.';
+import { PATH_CONFIG } from './const';
 
 export interface IPathConfig {
   assetsPath: string;

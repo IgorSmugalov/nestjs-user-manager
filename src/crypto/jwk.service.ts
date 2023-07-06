@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
-import { JWK_CONFIG } from 'src/config';
+import { JWK_CONFIG } from 'src/config/const';
 import { JwkSetType } from './types';
 import {
   exportPKCS8,

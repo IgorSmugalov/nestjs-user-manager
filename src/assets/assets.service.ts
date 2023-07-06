@@ -4,7 +4,7 @@ import { path } from 'app-root-path';
 import { mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import * as sharp from 'sharp';
-import { PATH_CONFIG } from 'src/config';
+import { PATH_CONFIG } from 'src/config/const';
 import { IPathConfig } from 'src/config/path.congfig';
 
 @Injectable()

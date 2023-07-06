@@ -38,7 +38,7 @@ export class UserDTO implements User {
   activated: boolean;
 
   @Expose()
-  @IsString()
+  @IsUUID(4)
   @ApiProperty()
   activationKey: string;
 
@@ -65,7 +65,7 @@ export class UserDTO implements User {
   @TransformPlainToInstance(UserDTO, {
     strategy: 'excludeAll',
   })
-  static fromPrisma(profile: User): UserDTO {
+  static fromUser(profile: User): UserDTO {
     return profile;
   }
 }

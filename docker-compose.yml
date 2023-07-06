@@ -32,9 +32,28 @@ services:
     ports:
       - 5433:80
 
+  smtp4dev:
+    image: rnwood/smtp4dev
+    restart: always
+    ports:
+      - '3001:80' # // WEB GUI
+      - '25:25' # // SMTP
+      # - '143:143' // IMAP
+    volumes:
+      - user_app_smtp:/smtp4dev
+    networks:
+      - user_app
+    environment:
+      - ServerOptions__HostName=smtp4dev
+      - ServerOptions__LockSettings=true
+      - ServerOptions__TlsMode=ImplicitTls
+      - RelayOptions__Login=user
+      - RelayOptions__Password=password
+
 volumes:
   user_app_database:
   user_app_pgadmin:
+  user_app_smtp:
 
 
 networks:

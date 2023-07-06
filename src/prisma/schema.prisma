@@ -16,8 +16,10 @@ model User {
   email                String         @unique
   password             String
   activated            Boolean        @default(false)
-  activationKey        String         @unique @default(uuid())
-  activationKeyCreated DateTime       @default(now())
+  activationKey        String?        @unique @default(uuid())
+  activationKeyCreated DateTime?      @default(now())
+  // restorePasswordKey        String?
+  // restorePasswordKeyCreated DateTime?
   // 
   userProfileId        String         @unique
   userProfile          Profile        @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)

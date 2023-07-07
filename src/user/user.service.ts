@@ -36,10 +36,6 @@ export class UserService {
     const user = await this.prisma.user.create({
       data: dto.createUserAndProfileInput(),
     });
-    await this.mailerService.sendHelloMessage(
-      user,
-      'You account succesfully created',
-    );
     await this.mailerService.sendActivationMessage(user);
     return CreateUserResponseDTO.fromPrisma(user);
   }

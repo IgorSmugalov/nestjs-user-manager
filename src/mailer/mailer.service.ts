@@ -2,23 +2,42 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
-import { SMTP_CONFIG } from 'src/config/const';
+import { SERVER_CONFIG, SMTP_CONFIG } from 'src/config/const';
 import { ISMTPConfig } from 'src/config/smtp.congfig';
 import { UserDTO } from 'src/user/dto/user.dto';
+import * as hbs from 'nodemailer-express-handlebars';
+import { IServerConfig } from 'src/config/server.congfig';
+import { join } from 'path';
+import { path } from 'app-root-path';
 import { EmailCanNotBeSentException } from './mailer.exceptions';
 
 @Injectable()
 export class MailerService {
   constructor(private readonly configService: ConfigService) {}
-  private readonly config = this.configService.get<ISMTPConfig>(SMTP_CONFIG);
+
+  private readonly smtpConfig =
+    this.configService.get<ISMTPConfig>(SMTP_CONFIG);
+  private readonly serverConfig =
+    this.configService.get<IServerConfig>(SERVER_CONFIG);
   private readonly logger = new Logger(this.constructor.name);
-  private readonly smtpTransport = nodemailer.createTransport({
-    host: this.config.host,
-    port: this.config.port,
-    secure: true,
-    tls: { rejectUnauthorized: false },
-    auth: { user: this.config.user, pass: this.config.password },
+  private readonly templatesPath = join(path, '/src/mailer/templates/');
+  private readonly hbsConfig = hbs({
+    viewEngine: {
+      layoutsDir: this.templatesPath,
+      partialsDir: this.templatesPath,
+      defaultLayout: '',
+    },
+    viewPath: this.templatesPath,
   });
+  private readonly smtpTransport = nodemailer
+    .createTransport({
+      host: this.smtpConfig.host,
+      port: this.smtpConfig.port,
+      secure: true,
+      tls: { rejectUnauthorized: false },
+      auth: { user: this.smtpConfig.user, pass: this.smtpConfig.password },
+    })
+    .use('compile', this.hbsConfig);
 
   async onModuleInit() {
     try {
@@ -29,36 +48,19 @@ export class MailerService {
     }
   }
 
-  public async sendHelloMessage(
-    user: UserDTO,
-    messageText: string,
-  ): Promise<string> {
-    const message: Mail.Options = {
-      from: 'noreply@usersapp.fake',
-      to: user.email,
-      subject: `Hello, ${user.email}`,
-      html: `<p>${messageText}</p>`,
-    };
-    let messageId: string;
-    try {
-      messageId = (await this.smtpTransport.sendMail(message)).messageId;
-    } catch {
-      throw new EmailCanNotBeSentException();
-    }
-    return messageId;
-  }
-
   public async sendActivationMessage(user: UserDTO): Promise<string> {
-    const message: Mail.Options = {
-      from: 'noreply@usersapp.fake',
+    const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/email-activation-proxy/${user.activationKey}`;
+    const message: Mail.Options & hbs.TemplateOptions = {
+      from: 'noreply@users-app.fake',
       to: user.email,
       subject: `Activation ${user.email}`,
-      html: `<p>${user.activationKey}</p>`,
+      template: 'confirm',
+      context: { link },
     };
     let messageId: string;
     try {
       messageId = (await this.smtpTransport.sendMail(message)).messageId;
-    } catch {
+    } catch (error) {
       throw new EmailCanNotBeSentException();
     }
     return messageId;

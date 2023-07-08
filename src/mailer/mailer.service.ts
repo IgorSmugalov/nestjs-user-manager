@@ -4,12 +4,12 @@ import * as nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import { SERVER_CONFIG, SMTP_CONFIG } from 'src/config/const';
 import { ISMTPConfig } from 'src/config/smtp.congfig';
-import { UserDTO } from 'src/user/dto/user.dto';
 import * as hbs from 'nodemailer-express-handlebars';
 import { IServerConfig } from 'src/config/server.congfig';
 import { join } from 'path';
 import { path } from 'app-root-path';
 import { EmailCanNotBeSentException } from './mailer.exceptions';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class MailerService {
@@ -48,13 +48,31 @@ export class MailerService {
     }
   }
 
-  public async sendActivationMessage(user: UserDTO): Promise<string> {
+  public async sendActivationMessage(user: User): Promise<string> {
     const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/email-activation-proxy/${user.activationKey}`;
     const message: Mail.Options & hbs.TemplateOptions = {
       from: 'noreply@users-app.fake',
       to: user.email,
       subject: `Activation ${user.email}`,
       template: 'confirm',
+      context: { link },
+    };
+    let messageId: string;
+    try {
+      messageId = (await this.smtpTransport.sendMail(message)).messageId;
+    } catch (error) {
+      throw new EmailCanNotBeSentException();
+    }
+    return messageId;
+  }
+
+  public async sendPasswordRecoveryMessage(user: User): Promise<string> {
+    const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery-proxy/${user.recoveryPasswordKey}`;
+    const message: Mail.Options & hbs.TemplateOptions = {
+      from: 'noreply@users-app.fake',
+      to: user.email,
+      subject: `Password Recovery for ${user.email}`,
+      template: 'password-recovery',
       context: { link },
     };
     let messageId: string;

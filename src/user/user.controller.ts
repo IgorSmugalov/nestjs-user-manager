@@ -41,6 +41,7 @@ import { SERVER_CONFIG } from 'src/config/const';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { UseResponseSerializer } from 'src/utils/serialization/use-response-serializer.decorator';
 import { User } from '@prisma/client';
+import { UserRecoveryPasswordKey } from './types';
 
 @Controller('user')
 @ApiTags('User')
@@ -88,7 +89,7 @@ export class UserController {
   @ApiParam({ name: 'activationKey', type: UserActivationKeyDTO })
   @ApiException(() => [ActivationKeyNotValidException])
   @ApiCreatedResponse({ type: ActivationUserResponseDTO })
-  async redirect(@Param() activationDTO: UserActivationKeyDTO) {
+  async activationProxy(@Param() activationDTO: UserActivationKeyDTO) {
     const { data } = await firstValueFrom(
       this.httpService
         .post(
@@ -111,6 +112,27 @@ export class UserController {
   @ApiCreatedResponse({ type: UserEmailDTO })
   async initPasswordRecovering(@Param() emailDto: UserEmailDTO): Promise<User> {
     return await this.userService.initPasswordRecovering(emailDto);
+  }
+
+  @Get('pass-recovery-proxy/:recoveryPasswordKey')
+  @UseRequestValidation()
+  @ApiParam({ name: 'recoveryPasswordKey', type: UserActivationKeyDTO })
+  @ApiException(() => [ActivationKeyNotValidException])
+  @ApiCreatedResponse({ type: ActivationUserResponseDTO })
+  async passwordRecoveringProxy(@Param() recoveryDTO: UserRecoveryPasswordKey) {
+    const { data } = await firstValueFrom(
+      this.httpService
+        .get(
+          `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery`,
+          { data: recoveryDTO },
+        )
+        .pipe(
+          catchError((error: AxiosError) => {
+            throw new HttpException(error.response.data, error.response.status);
+          }),
+        ),
+    );
+    return data;
   }
 
   @Get('pass-recovery')

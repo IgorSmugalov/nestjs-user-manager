@@ -99,14 +99,15 @@ export class UserService {
 
   public async initPasswordRecovering(emailDto: UserEmailDTO) {
     const { email } = emailDto;
-    const user = await this.get({ email }, { throwOnNotFound: true });
-    await this.prisma.user.update({
+    let user = await this.get({ email }, { throwOnNotFound: true });
+    user = await this.prisma.user.update({
       where: { email },
       data: {
         recoveryPasswordKey: uuid.v4(),
         recoveryPasswordKeyCreated: new Date(),
       },
     });
+    await this.mailerService.sendPasswordRecoveryMessage(user);
     return user;
   }
 

@@ -9,6 +9,7 @@ export enum UserExceptionMessages {
   userDoesNotExistst = 'Пользователь не существует',
   activationKeyNotValid = 'Ключ активации не валиден',
   userAlreadyActivated = 'Пользователь уже активирован',
+  passwordRecoveryKeyNotValid = 'Ключ восстановления пароля не валиден',
 }
 
 export class UserUnknownErrorException extends InternalServerErrorException {
@@ -38,5 +39,11 @@ export class ActivationKeyNotValidException extends BadRequestException {
 export class UserAlreadyActivatedException extends BadRequestException {
   constructor() {
     super(UserExceptionMessages.userAlreadyActivated);
+  }
+}
+
+export class PasswordRecoveryKeyNotValidException extends BadRequestException {
+  constructor() {
+    super(UserExceptionMessages.passwordRecoveryKeyNotValid);
   }
 }

@@ -1,8 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { CreateProfileInput } from 'src/profile/types';
 
-// Create User
-
 type CreateUserInput = Prisma.UserGetPayload<{
   select: { email: true; password: true };
 }>;
@@ -18,6 +16,10 @@ export type ActivationUserResponse = Prisma.UserGetPayload<{
   select: { email: true; activated: true };
 }>;
 
+export type RecoveryPassword = Prisma.UserGetPayload<{
+  select: { recoveryPasswordKey: true; password: true };
+}>;
+
 // User params
 
 export type UserId = Prisma.UserGetPayload<{
@@ -30,6 +32,10 @@ export type UserEmail = Prisma.UserGetPayload<{
 
 export type UserActivationKey = Prisma.UserGetPayload<{
   select: { activationKey: true };
+}>;
+
+export type UserRecoveryPasswordKey = Prisma.UserGetPayload<{
+  select: { recoveryPasswordKey: true };
 }>;
 
 // User service

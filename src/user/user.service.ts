@@ -4,13 +4,18 @@ import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
 import { Prisma } from '@prisma/client';
 import {
   ActivationKeyNotValidException,
+  PasswordRecoveryKeyNotValidException,
   UserAlreadyActivatedException,
   UserAlreadyExistsException,
   UserDoesNotExistsException,
 } from './user.exceptions';
 import { UserDTO } from './dto/user.dto';
-import { IGetUserOptions } from './types';
-import { UserActivationKeyDTO, UserEmailDTO } from './dto/params.dto';
+import { IGetUserOptions, RecoveryPassword } from './types';
+import {
+  UserActivationKeyDTO,
+  UserEmailDTO,
+  UserRecoveryPasswordKeyDTO,
+} from './dto/params.dto';
 import { ConfigService } from '@nestjs/config';
 import { USER_CONFIG } from 'src/config/const';
 import { IUserConfig } from 'src/config/user.config';
@@ -30,9 +35,9 @@ export class UserService {
   ) {}
   private config = this.configService.get<IUserConfig>(USER_CONFIG);
 
-  public async registerUser(dto: CreateUserAndProfileDTO) {
-    dto.password = await this.hashService.hashPassword(dto.password);
+  public async create(dto: CreateUserAndProfileDTO) {
     await this.get(dto, { throwOnFound: true });
+    dto.password = await this.hashService.hashPassword(dto.password);
     const user = await this.prisma.user.create({
       data: dto.createUserAndProfileInput(),
     });
@@ -58,7 +63,13 @@ export class UserService {
     let user = await this.get({
       activationKey,
     });
-    if (!user || !this.isValidKey(user?.activationKeyCreated, 'activation')) {
+    if (
+      !user ||
+      !this.isKeyExpired(
+        user?.activationKeyCreated,
+        this.config.activationKeyMaxAge,
+      )
+    ) {
       throw new ActivationKeyNotValidException();
     }
     user = await this.prisma.user.update({
@@ -72,7 +83,8 @@ export class UserService {
     return ActivationUserResponseDTO.fromUser(user);
   }
 
-  public async renewActivationKey({ email }: UserEmailDTO) {
+  public async renewActivationKey(emailDto: UserEmailDTO) {
+    const { email } = emailDto;
     let user = await this.get({ email }, { throwOnNotFound: true });
     if (user.activated) throw new UserAlreadyActivatedException();
     user = await this.prisma.user.update({
@@ -83,27 +95,75 @@ export class UserService {
     return ActivationUserResponseDTO.fromUser(user);
   }
 
+  // Password recovering
+
+  public async initPasswordRecovering(emailDto: UserEmailDTO) {
+    const { email } = emailDto;
+    const user = await this.get({ email }, { throwOnNotFound: true });
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        recoveryPasswordKey: uuid.v4(),
+        recoveryPasswordKeyCreated: new Date(),
+      },
+    });
+    return user;
+  }
+
+  public async validatePasswordRecoveryKey(keyDto: UserRecoveryPasswordKeyDTO) {
+    const user = await this.get({
+      recoveryPasswordKey: keyDto.recoveryPasswordKey,
+    });
+    if (
+      !user ||
+      !this.isKeyExpired(
+        user?.recoveryPasswordKeyCreated,
+        this.config.passwordRecoveryKeyMaxAge,
+      )
+    ) {
+      throw new PasswordRecoveryKeyNotValidException();
+    }
+    return user;
+  }
+
+  public async finishPasswordRecovering(recoveryDto: RecoveryPassword) {
+    await this.validatePasswordRecoveryKey(recoveryDto);
+    recoveryDto.password = await this.hashService.hashPassword(
+      recoveryDto.password,
+    );
+    return await this.prisma.user.update({
+      where: { recoveryPasswordKey: recoveryDto.recoveryPasswordKey },
+      data: {
+        password: recoveryDto.password,
+        recoveryPasswordKey: null,
+        recoveryPasswordKeyCreated: null,
+      },
+    });
+  }
+
+  // Utils
+
   private userUniqueInput(input: Prisma.UserWhereUniqueInput) {
-    const { id, email, activationKey, userProfileId } = input;
+    const { id, email, activationKey, recoveryPasswordKey, userProfileId } =
+      input;
     return Prisma.validator<Prisma.UserWhereUniqueInput>()({
       email,
       id,
       activationKey,
+      recoveryPasswordKey,
       userProfileId,
     });
   }
 
-  private isValidKey(
-    keyCreationalDate: Date,
-    target: 'activation' | 'passwordRestoring',
-  ): boolean {
+  private isKeyExpired(keyIssTime: Date, keyMaxAge: number): boolean {
     const now = Date.now();
-    const createdAt = keyCreationalDate.getTime();
-    const expiresAfter = this.config[`${target}KeyExpiresAfter`];
-    return now - createdAt < expiresAfter;
+    const createdAt = keyIssTime.getTime();
+    return now - createdAt < keyMaxAge;
   }
 }
 
 // TODO: for get -> Добавить возможность выбора выбрасываемой ошибки
 
 // TODO: for update -> Добавить prisma validator
+
+// TODO: for all -> заменить DTO на типы

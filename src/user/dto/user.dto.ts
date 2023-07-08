@@ -53,6 +53,16 @@ export class UserDTO implements User {
   userProfileId: string;
 
   @Expose()
+  @IsUUID(4)
+  @ApiProperty()
+  recoveryPasswordKey: string;
+
+  @Expose()
+  @IsDate()
+  @ApiProperty()
+  recoveryPasswordKeyCreated: Date;
+
+  @Expose()
   @IsDate()
   @ApiProperty()
   createdAt: Date;

@@ -5,6 +5,7 @@ import { plainToInstance } from 'class-transformer';
 import { JWTPayload } from 'jose';
 import { IsUUID } from 'class-validator';
 import { UserDTO } from 'src/user/dto/user.dto';
+import { User } from '@prisma/client';
 
 class PartialUserEntity extends PickType(UserDTO, ['id']) {
   @IsUUID()
@@ -21,7 +22,7 @@ export class RefreshJwtClaimsDTO
   extends IntersectionType(PartialRegisteredClaims, PartialUserEntity)
   implements RefreshJwtClaims
 {
-  static fromUser(user: UserDTO): RefreshJwtClaimsDTO {
+  static fromUser(user: User): RefreshJwtClaimsDTO {
     return plainToInstance(this, user, {
       strategy: 'excludeAll',
       exposeUnsetFields: false,

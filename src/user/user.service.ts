@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import {
   ActivationKeyNotValidException,
   PasswordRecoveryKeyNotValidException,
@@ -9,8 +9,7 @@ import {
   UserAlreadyExistsException,
   UserDoesNotExistsException,
 } from './user.exceptions';
-import { UserDTO } from './dto/user.dto';
-import { IGetUserOptions, RecoveryPassword } from './types';
+import { IGetUserOptions } from './types';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
@@ -21,9 +20,8 @@ import { USER_CONFIG } from 'src/config/const';
 import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
 import { MailerService } from 'src/mailer/mailer.service';
-import { CreateUserResponseDTO } from './dto/create-user-response.dto';
-import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
 import * as uuid from 'uuid';
+import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 
 @Injectable()
 export class UserService {
@@ -42,23 +40,23 @@ export class UserService {
       data: dto.createUserAndProfileInput(),
     });
     await this.mailerService.sendActivationMessage(user);
-    return CreateUserResponseDTO.fromPrisma(user);
+    return user;
   }
 
   public async get(
     dto: Prisma.UserWhereUniqueInput,
     options?: IGetUserOptions,
-  ): Promise<UserDTO> {
+  ): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: this.userUniqueInput(dto),
     });
     if (options?.throwOnFound && user) throw new UserAlreadyExistsException();
     if (options?.throwOnNotFound && !user)
       throw new UserDoesNotExistsException();
-    return UserDTO.fromUser(user);
+    return user;
   }
 
-  public async acivateByKey(dto: UserActivationKeyDTO) {
+  public async acivateByKey(dto: UserActivationKeyDTO): Promise<User> {
     const { activationKey } = dto;
     let user = await this.get({
       activationKey,
@@ -80,11 +78,11 @@ export class UserService {
         activationKeyCreated: null,
       },
     });
-    return ActivationUserResponseDTO.fromUser(user);
+    return user;
   }
 
-  public async renewActivationKey(emailDto: UserEmailDTO) {
-    const { email } = emailDto;
+  public async renewActivationKey(dto: UserEmailDTO): Promise<User> {
+    const { email } = dto;
     let user = await this.get({ email }, { throwOnNotFound: true });
     if (user.activated) throw new UserAlreadyActivatedException();
     user = await this.prisma.user.update({
@@ -92,13 +90,13 @@ export class UserService {
       data: { activationKeyCreated: new Date(), activationKey: uuid.v4() },
     });
     await this.mailerService.sendActivationMessage(user);
-    return ActivationUserResponseDTO.fromUser(user);
+    return user;
   }
 
   // Password recovering
 
-  public async initPasswordRecovering(emailDto: UserEmailDTO) {
-    const { email } = emailDto;
+  public async initPasswordRecovering(dto: UserEmailDTO): Promise<User> {
+    const { email } = dto;
     let user = await this.get({ email }, { throwOnNotFound: true });
     user = await this.prisma.user.update({
       where: { email },
@@ -111,9 +109,11 @@ export class UserService {
     return user;
   }
 
-  public async validatePasswordRecoveryKey(keyDto: UserRecoveryPasswordKeyDTO) {
+  public async validatePasswordRecoveryKey(
+    dto: UserRecoveryPasswordKeyDTO,
+  ): Promise<User> {
     const user = await this.get({
-      recoveryPasswordKey: keyDto.recoveryPasswordKey,
+      recoveryPasswordKey: dto.recoveryPasswordKey,
     });
     if (
       !user ||
@@ -127,15 +127,15 @@ export class UserService {
     return user;
   }
 
-  public async finishPasswordRecovering(recoveryDto: RecoveryPassword) {
-    await this.validatePasswordRecoveryKey(recoveryDto);
-    recoveryDto.password = await this.hashService.hashPassword(
-      recoveryDto.password,
-    );
+  public async finishPasswordRecovering(
+    dto: RecoveryPasswordDTO,
+  ): Promise<User> {
+    await this.validatePasswordRecoveryKey(dto);
+    dto.password = await this.hashService.hashPassword(dto.password);
     return await this.prisma.user.update({
-      where: { recoveryPasswordKey: recoveryDto.recoveryPasswordKey },
+      where: { recoveryPasswordKey: dto.recoveryPasswordKey },
       data: {
-        password: recoveryDto.password,
+        password: dto.password,
         recoveryPasswordKey: null,
         recoveryPasswordKeyCreated: null,
       },

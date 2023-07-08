@@ -2,7 +2,7 @@ import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { ProfileIdDTO } from './dto/params.dto';
-import { UseRequestValidation } from 'src/utils/validation/use-request-validation.decorator';
+import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { ApiBody, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ParseProfileFormData } from './decorators/parse-profile-form-data.decorator';
 import { ProfileDTO } from './dto/profile.dto';

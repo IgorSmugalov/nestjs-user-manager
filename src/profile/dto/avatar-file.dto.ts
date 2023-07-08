@@ -1,7 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { AvatarFile } from '../types';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsImage } from 'src/utils/validation/isImage';
+import { IsImage } from 'src/lib/validation/isImage';
 import { Allow } from 'class-validator';
 
 export class AvatarFileDTO implements AvatarFile {

@@ -22,8 +22,8 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { OnlyPublicAccess } from 'src/auth/decorators/public-access.decorator';
 import { SERVER_CONFIG } from 'src/config/const';
 import { IServerConfig } from 'src/config/server.congfig';
-import { UseResponseSerializer } from 'src/utils/serialization/use-response-serializer.decorator';
-import { UseRequestValidation } from 'src/utils/validation/use-request-validation.decorator';
+import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
+import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
 import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
 import {

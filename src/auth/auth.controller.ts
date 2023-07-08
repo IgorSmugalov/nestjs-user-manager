@@ -2,7 +2,7 @@ import { Body, Controller, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CredentialsDTO } from './dto/credentials.dto';
 import { Response } from 'express';
-import { UseRequestValidation } from 'src/utils/validation/use-request-validation.decorator';
+import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { RefreshedAccess } from './decorators/refreshed-access.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';

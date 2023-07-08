@@ -5,11 +5,11 @@ import { AuthModule } from './auth/auth.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { AccessJwtAuthMiddleware } from './auth/middlewares/access-jwt-auth.middleware';
 import { APP_FILTER } from '@nestjs/core';
-import { GlobalExceptionFilter } from './utils/exception/global-exception.filter';
+import { GlobalExceptionFilter } from './lib/exception/global-exception.filter';
 import { UserModule } from './user/user.module';
 import { ProfileModule } from './profile/profile.module';
-import { MaxFileSizeConstraint } from './utils/validation/max-file-size.validator';
-import { IsImageBufferConstraint } from './utils/validation/isImage';
+import { MaxFileSizeConstraint } from './lib/validation/max-file-size.validator';
+import { IsImageBufferConstraint } from './lib/validation/isImage';
 import { AssetsModule } from './assets/assets.module';
 import { MailerModule } from './mailer/mailer.module';
 

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '@prisma/client';
-import { Expose, TransformPlainToInstance } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -71,11 +71,4 @@ export class UserDTO implements User {
   @IsDate()
   @ApiProperty()
   updatedAt: Date;
-
-  @TransformPlainToInstance(UserDTO, {
-    strategy: 'excludeAll',
-  })
-  static fromUser(profile: User): UserDTO {
-    return profile;
-  }
 }

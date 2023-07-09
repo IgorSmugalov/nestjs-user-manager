@@ -13,13 +13,11 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
-import { OnlyPublicAccess } from 'src/auth/decorators/public-access.decorator';
 import { SERVER_CONFIG } from 'src/config/const';
 import { IServerConfig } from 'src/config/server.congfig';
 import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
@@ -56,12 +54,11 @@ export class UserController {
     this.configService.get<IServerConfig>(SERVER_CONFIG);
 
   @Post('register')
-  @OnlyPublicAccess()
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiBody({ type: CreateUserAndProfileDTO })
-  @ApiException(() => UserAlreadyExistsException)
   @ApiCreatedResponse({ type: UserResponseDTO })
+  @ApiException(() => UserAlreadyExistsException)
   async register(@Body() createDto: CreateUserAndProfileDTO): Promise<User> {
     return await this.userService.create(createDto);
   }
@@ -69,9 +66,8 @@ export class UserController {
   @Get(':id')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
-  @ApiParam({ name: 'id', type: CreateUserAndProfileDTO })
-  @ApiException(() => UserAlreadyExistsException)
   @ApiOkResponse({ type: UserResponseDTO })
+  @ApiException(() => UserDoesNotExistsException)
   async getById(@Param() userId: UserIdDTO): Promise<User> {
     return await this.userService.get(userId, { throwOnNotFound: true });
   }
@@ -79,7 +75,6 @@ export class UserController {
   @Post('activate/:activationKey')
   @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)
-  @ApiParam({ name: 'activationKey', type: UserActivationKeyDTO })
   @ApiCreatedResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => ActivationKeyNotValidException)
   async activate(@Param() activationDTO: UserActivationKeyDTO): Promise<User> {
@@ -89,16 +84,18 @@ export class UserController {
   @Post('renew-activation-key/:email')
   @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)
-  @ApiParam({ name: 'email', type: UserEmailDTO })
   @ApiCreatedResponse({ type: ActivationUserResponseDTO })
-  @ApiException(() => UserAlreadyActivatedException)
+  @ApiException(() => [
+    UserAlreadyActivatedException,
+    UserDoesNotExistsException,
+  ])
   async renewActivationKey(@Param() emailDto: UserEmailDTO) {
     return await this.userService.renewActivationKey(emailDto);
   }
 
   @Get('email-activation-proxy/:activationKey')
   @UseRequestValidation()
-  @ApiParam({ name: 'activationKey', type: UserActivationKeyDTO })
+  @UseResponseSerializer(ActivationUserResponseDTO)
   @ApiOkResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => ActivationKeyNotValidException)
   async activationProxy(
@@ -121,7 +118,6 @@ export class UserController {
   @Post('pass-recovery-init/:email')
   @UseRequestValidation()
   @UseResponseSerializer(UserEmailDTO)
-  @ApiParam({ name: 'email', type: UserEmailDTO })
   @ApiCreatedResponse({ type: UserEmailDTO })
   @ApiException(() => UserDoesNotExistsException)
   async initPasswordRecovering(@Param() emailDto: UserEmailDTO): Promise<User> {
@@ -131,7 +127,6 @@ export class UserController {
   @Get('pass-recovery-proxy/:recoveryPasswordKey')
   @UseRequestValidation()
   @UseResponseSerializer(UserRecoveryPasswordKeyDTO)
-  @ApiParam({ name: 'recoveryPasswordKey', type: UserActivationKeyDTO })
   @ApiOkResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => ActivationKeyNotValidException)
   async passwordRecoveringProxy(

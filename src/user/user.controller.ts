@@ -32,7 +32,7 @@ import {
 } from './dto/params.dto';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { UserResponseDTO } from './dto/user-response.dto';
-import { UserActivationKey, UserRecoveryPasswordKey } from './types';
+import { UserActivationKey } from './types';
 import {
   ActivationKeyNotValidException,
   PasswordRecoveryKeyNotValidException,
@@ -124,37 +124,13 @@ export class UserController {
     return await this.userService.initPasswordRecovering(emailDto);
   }
 
-  @Get('pass-recovery-proxy/:recoveryPasswordKey')
+  @Get('pass-recovery/:recoveryPasswordKey')
   @UseRequestValidation()
   @UseResponseSerializer(UserRecoveryPasswordKeyDTO)
-  @ApiOkResponse({ type: ActivationUserResponseDTO })
-  @ApiException(() => ActivationKeyNotValidException)
-  async passwordRecoveringProxy(
-    @Param() recoveryDTO: UserRecoveryPasswordKey,
-  ): Promise<UserRecoveryPasswordKey> {
-    const { data } = await firstValueFrom(
-      this.httpService
-        .get(
-          `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery`,
-          { data: recoveryDTO },
-        )
-        .pipe(
-          catchError((error: AxiosError) => {
-            throw new HttpException(error.response.data, error.response.status);
-          }),
-        ),
-    );
-    return data;
-  }
-
-  @Get('pass-recovery')
-  @UseRequestValidation()
-  @UseResponseSerializer(UserRecoveryPasswordKeyDTO)
-  @ApiBody({ type: UserRecoveryPasswordKeyDTO })
   @ApiOkResponse({ type: UserRecoveryPasswordKeyDTO })
   @ApiException(() => PasswordRecoveryKeyNotValidException)
   async checkPasswordRecoveryKey(
-    @Body() keyDto: UserRecoveryPasswordKeyDTO,
+    @Param() keyDto: UserRecoveryPasswordKeyDTO,
   ): Promise<User> {
     return await this.userService.validatePasswordRecoveryKey(keyDto);
   }

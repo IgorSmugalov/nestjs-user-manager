@@ -67,7 +67,7 @@ export class MailerService {
   }
 
   public async sendPasswordRecoveryMessage(user: User): Promise<string> {
-    const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery-proxy/${user.recoveryPasswordKey}`;
+    const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery/${user.recoveryPasswordKey}`;
     const message: Mail.Options & hbs.TemplateOptions = {
       from: 'noreply@users-app.fake',
       to: user.email,

@@ -10,6 +10,7 @@ export enum UserExceptionMessages {
   activationKeyNotValid = 'Ключ активации не валиден',
   userAlreadyActivated = 'Пользователь уже активирован',
   passwordRecoveryKeyNotValid = 'Ключ восстановления пароля не валиден',
+  KeyExpired = 'Ключ просрочен',
 }
 
 export class UserUnknownErrorException extends InternalServerErrorException {
@@ -45,5 +46,11 @@ export class UserAlreadyActivatedException extends BadRequestException {
 export class PasswordRecoveryKeyNotValidException extends BadRequestException {
   constructor() {
     super(UserExceptionMessages.passwordRecoveryKeyNotValid);
+  }
+}
+
+export class KeyExpiredException extends BadRequestException {
+  constructor() {
+    super(UserExceptionMessages.KeyExpired);
   }
 }

@@ -26,13 +26,13 @@ export class AuthService {
   ) {}
 
   public async authByCredentials(userCredentials: CredentialsDTO) {
-    const { password } = userCredentials;
-    let user: undefined | User;
+    const { email, password } = userCredentials;
+    let user: User | null;
     try {
-      user = await this.userService.get(userCredentials, {
-        throwOnNotFound: true,
+      user = await this.userService.getUnique({ email });
+      await this.hashService.validatePassword(user.password, password, {
+        throwOnFail: true,
       });
-      await this.hashService.validatePassword(user.password, password, true);
     } catch {
       throw new IncorrectCredentialsException();
     }
@@ -46,7 +46,7 @@ export class AuthService {
   }
 
   public async authByRefreshToken(userClaims: RefreshJwtClaimsDTO) {
-    const user = await this.userService.get({ id: userClaims.id });
+    const user = await this.userService.getUnique({ id: userClaims.id });
     if (!user) throw new UserUnauthorizedException();
     const profile = await this.profileService.getProfile({
       id: user.userProfileId,

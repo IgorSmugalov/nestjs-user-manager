@@ -1,4 +1,4 @@
-import { AccessJwtClaimsDTO } from 'src/auth/dto/jwt-claims-access.dto';
+import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { RefreshJwtClaimsDTO } from 'src/auth/dto/jwt-claims-refresh.dto';
 
 export {};
@@ -6,7 +6,7 @@ export {};
 declare global {
   namespace Express {
     export interface Request {
-      user: AccessJwtClaimsDTO | null;
+      user: AuthenticatedUserDTO | null;
       refreshedUser: RefreshJwtClaimsDTO | null;
     }
   }

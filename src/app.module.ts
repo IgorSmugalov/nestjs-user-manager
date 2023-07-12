@@ -9,7 +9,7 @@ import { GlobalExceptionFilter } from './lib/exception/global-exception.filter';
 import { UserModule } from './user/user.module';
 import { ProfileModule } from './profile/profile.module';
 import { MaxFileSizeConstraint } from './lib/validation/max-file-size.validator';
-import { IsImageBufferConstraint } from './lib/validation/isImage';
+import { IsImageBufferConstraint } from './lib/validation/isImage.validator';
 import { AssetsModule } from './assets/assets.module';
 import { MailerModule } from './mailer/mailer.module';
 

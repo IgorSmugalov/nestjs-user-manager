@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { CreateProfileInput } from 'src/profile/types';
+import { RequireExactlyOne } from 'type-fest';
 
 type CreateUserInput = Prisma.UserGetPayload<{
   select: { email: true; password: true };
@@ -31,6 +32,10 @@ export type RecoveryPassword = Prisma.UserGetPayload<{
   select: { recoveryPasswordKey: true; password: true };
 }>;
 
+export type UpdatePassword = Prisma.UserGetPayload<{
+  select: { password: true };
+}> & { newPassword: string };
+
 // User params
 
 export type UserId = Prisma.UserGetPayload<{
@@ -51,7 +56,7 @@ export type UserRecoveryPasswordKey = Prisma.UserGetPayload<{
 
 // User service
 
-export interface IGetUserOptions {
-  throwOnNotFound?: boolean;
-  throwOnFound?: boolean;
-}
+export type GetUniqueUserInput = RequireExactlyOne<Prisma.UserWhereUniqueInput>;
+export type GetPartialUniqueUserInput = RequireExactlyOne<
+  Pick<Prisma.UserWhereUniqueInput, 'id' | 'email'>
+>;

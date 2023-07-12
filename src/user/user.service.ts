@@ -1,94 +1,107 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
-import { Prisma, User } from '@prisma/client';
-import {
-  ActivationKeyNotValidException,
-  PasswordRecoveryKeyNotValidException,
-  UserAlreadyActivatedException,
-  UserAlreadyExistsException,
-  UserDoesNotExistsException,
-} from './user.exceptions';
-import { IGetUserOptions } from './types';
-import {
-  UserActivationKeyDTO,
-  UserEmailDTO,
-  UserRecoveryPasswordKeyDTO,
-} from './dto/params.dto';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
+import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { USER_CONFIG } from 'src/config/const';
 import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
 import { MailerService } from 'src/mailer/mailer.service';
 import * as uuid from 'uuid';
+import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
+import {
+  UserActivationKeyDTO,
+  UserEmailDTO,
+  UserRecoveryPasswordKeyDTO,
+} from './dto/params.dto';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { GetPartialUniqueUserInput } from './types';
+import {
+  ActivationKeyNotValidException,
+  KeyExpiredException,
+  PasswordRecoveryKeyNotValidException,
+  UserAlreadyActivatedException,
+} from './user.exceptions';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly hashService: HashService,
     private readonly mailerService: MailerService,
+    private readonly userRepository: UserRepository,
   ) {}
   private config = this.configService.get<IUserConfig>(USER_CONFIG);
 
-  public async create(dto: CreateUserAndProfileDTO) {
-    await this.get(dto, { throwOnFound: true });
+  public async signIn(dto: CreateUserAndProfileDTO) {
     dto.password = await this.hashService.hashPassword(dto.password);
-    const user = await this.prisma.user.create({
-      data: dto.createUserAndProfileInput(),
-    });
+    const user = await this.userRepository.save(dto);
     await this.mailerService.sendActivationMessage(user);
     return user;
   }
 
-  public async get(
-    dto: Prisma.UserWhereUniqueInput,
-    options?: IGetUserOptions,
+  /**
+   * Get one User by id | email or throw User Does Not Exists Exception
+   * @param {GetPartialUniqueUserInput} dto - Accept only one unique search key!
+   **/
+  public async getUnique(dto: GetPartialUniqueUserInput): Promise<User> {
+    const { id, email } = dto;
+    if (id && email) dto.email = undefined;
+    return await this.userRepository.getUnique(dto);
+  }
+
+  public async updatePassword(
+    authenticatedUser: AuthenticatedUserDTO,
+    updatePasswordDto: UpdatePasswordDTO,
   ): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: this.userUniqueInput(dto),
+    const { password, newPassword } = updatePasswordDto;
+    const { id } = authenticatedUser;
+    let user = await this.userRepository.getUnique({ id });
+    await this.hashService.validatePassword(user.password, password, {
+      throwOnFail: true,
     });
-    if (options?.throwOnFound && user) throw new UserAlreadyExistsException();
-    if (options?.throwOnNotFound && !user)
-      throw new UserDoesNotExistsException();
+    const newHashedPassword = await this.hashService.hashPassword(newPassword);
+    user = await this.userRepository.updateUnique(
+      { id },
+      { password: newHashedPassword },
+    );
     return user;
   }
 
+  // TODO: Add delete user
+
+  // Activation
+
   public async acivateByKey(dto: UserActivationKeyDTO): Promise<User> {
-    const { activationKey } = dto;
-    let user = await this.get({
-      activationKey,
-    });
-    if (
-      !user ||
-      !this.isKeyExpired(
-        user?.activationKeyCreated,
+    try {
+      const user = await this.userRepository.getUnique(dto);
+      this.validateKey(
+        user.activationKeyCreated,
         this.config.activationKeyMaxAge,
-      )
-    ) {
+      );
+      return await this.userRepository.updateUnique(
+        {
+          activationKey: dto.activationKey,
+        },
+        { activationKey: null, activationKeyCreated: null, activated: true },
+      );
+    } catch {
       throw new ActivationKeyNotValidException();
     }
-    user = await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        activated: true,
-        activationKey: null,
-        activationKeyCreated: null,
-      },
-    });
-    return user;
   }
 
   public async renewActivationKey(dto: UserEmailDTO): Promise<User> {
     const { email } = dto;
-    let user = await this.get({ email }, { throwOnNotFound: true });
+    let user = await this.userRepository.getUnique({ email });
     if (user.activated) throw new UserAlreadyActivatedException();
-    user = await this.prisma.user.update({
-      where: { email },
-      data: { activationKeyCreated: new Date(), activationKey: uuid.v4() },
-    });
+    user = await this.userRepository.updateUnique(
+      { email },
+      {
+        activationKeyCreated: new Date(),
+        activationKey: uuid.v4(),
+      },
+    );
     await this.mailerService.sendActivationMessage(user);
     return user;
   }
@@ -96,75 +109,51 @@ export class UserService {
   // Password recovering
 
   public async initPasswordRecovering(dto: UserEmailDTO): Promise<User> {
-    const { email } = dto;
-    let user = await this.get({ email }, { throwOnNotFound: true });
-    user = await this.prisma.user.update({
-      where: { email },
-      data: {
-        recoveryPasswordKey: uuid.v4(),
-        recoveryPasswordKeyCreated: new Date(),
-      },
+    let user = await this.userRepository.getUnique(dto);
+    user = await this.userRepository.updateUnique(dto, {
+      recoveryPasswordKey: uuid.v4(),
+      recoveryPasswordKeyCreated: new Date(),
     });
     await this.mailerService.sendPasswordRecoveryMessage(user);
     return user;
   }
 
   public async validatePasswordRecoveryKey(
-    dto: UserRecoveryPasswordKeyDTO,
+    recoveryPasswordKeyDto: UserRecoveryPasswordKeyDTO,
   ): Promise<User> {
-    const user = await this.get({
-      recoveryPasswordKey: dto.recoveryPasswordKey,
-    });
-    if (
-      !user ||
-      !this.isKeyExpired(
-        user?.recoveryPasswordKeyCreated,
+    try {
+      const user = await this.userRepository.getUnique(recoveryPasswordKeyDto);
+      this.validateKey(
+        user.recoveryPasswordKeyCreated,
         this.config.passwordRecoveryKeyMaxAge,
-      )
-    ) {
+      );
+      return user;
+    } catch {
       throw new PasswordRecoveryKeyNotValidException();
     }
-    return user;
   }
 
   public async finishPasswordRecovering(
     dto: RecoveryPasswordDTO,
   ): Promise<User> {
-    await this.validatePasswordRecoveryKey(dto);
-    dto.password = await this.hashService.hashPassword(dto.password);
-    return await this.prisma.user.update({
-      where: { recoveryPasswordKey: dto.recoveryPasswordKey },
-      data: {
-        password: dto.password,
+    const { recoveryPasswordKey } = dto;
+    await this.validatePasswordRecoveryKey({ recoveryPasswordKey });
+    const password = await this.hashService.hashPassword(dto.password);
+    return await this.userRepository.updateUnique(
+      { recoveryPasswordKey },
+      {
         recoveryPasswordKey: null,
-        recoveryPasswordKeyCreated: null,
+        password,
       },
-    });
+    );
   }
 
   // Utils
 
-  private userUniqueInput(input: Prisma.UserWhereUniqueInput) {
-    const { id, email, activationKey, recoveryPasswordKey, userProfileId } =
-      input;
-    return Prisma.validator<Prisma.UserWhereUniqueInput>()({
-      email,
-      id,
-      activationKey,
-      recoveryPasswordKey,
-      userProfileId,
-    });
-  }
-
-  private isKeyExpired(keyIssTime: Date, keyMaxAge: number): boolean {
+  private validateKey(keyIssTime: Date, keyMaxAge: number): true | never {
     const now = Date.now();
     const createdAt = keyIssTime.getTime();
-    return now - createdAt < keyMaxAge;
+    if (now - createdAt < keyMaxAge) return true;
+    throw new KeyExpiredException();
   }
 }
-
-// TODO: for get -> Добавить возможность выбора выбрасываемой ошибки
-
-// TODO: for update -> Добавить prisma validator
-
-// TODO: for all -> заменить DTO на типы

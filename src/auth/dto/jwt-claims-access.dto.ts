@@ -21,11 +21,7 @@ class PartialRegisteredClaims extends PickType(RegisteredJwtClaimsDTO, [
 ]) {}
 
 export class AccessJwtClaimsDTO
-  extends IntersectionType(
-    PartialProfileEntity,
-    PartialUserEntity,
-    PartialRegisteredClaims,
-  )
+  extends IntersectionType(PartialUserEntity, PartialRegisteredClaims)
   implements AccessJwtClaims
 {
   @Expose()

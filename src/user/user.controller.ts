@@ -32,7 +32,6 @@ import {
 } from './dto/params.dto';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { UserResponseDTO } from './dto/user-response.dto';
-import { UserActivationKey } from './types';
 import {
   ActivationKeyNotValidException,
   PasswordRecoveryKeyNotValidException,
@@ -41,6 +40,11 @@ import {
   UserDoesNotExistsException,
 } from './user.exceptions';
 import { UserService } from './user.service';
+import { UserActivationKey } from './types';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
+import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
+import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
 
 @Controller('user')
 @ApiTags('User')
@@ -60,7 +64,7 @@ export class UserController {
   @ApiCreatedResponse({ type: UserResponseDTO })
   @ApiException(() => UserAlreadyExistsException)
   async register(@Body() createDto: CreateUserAndProfileDTO): Promise<User> {
-    return await this.userService.create(createDto);
+    return await this.userService.signIn(createDto);
   }
 
   @Get(':id')
@@ -69,7 +73,20 @@ export class UserController {
   @ApiOkResponse({ type: UserResponseDTO })
   @ApiException(() => UserDoesNotExistsException)
   async getById(@Param() userId: UserIdDTO): Promise<User> {
-    return await this.userService.get(userId, { throwOnNotFound: true });
+    return await this.userService.getUnique(userId);
+  }
+
+  @Post('update-password')
+  @UseRequestValidation()
+  @UseResponseSerializer(UserResponseDTO)
+  @ApiBody({ type: UpdatePasswordDTO })
+  @ApiCreatedResponse({ type: UserResponseDTO })
+  @ApiException(() => [UserDoesNotExistsException, IncorrectPasswordException])
+  async updatePassword(
+    @AuthenticatedUser() userDto: AuthenticatedUserDTO,
+    @Body() updateDto: UpdatePasswordDTO,
+  ): Promise<User> {
+    return await this.userService.updatePassword(userDto, updateDto);
   }
 
   @Post('activate/:activationKey')
@@ -91,28 +108,6 @@ export class UserController {
   ])
   async renewActivationKey(@Param() emailDto: UserEmailDTO) {
     return await this.userService.renewActivationKey(emailDto);
-  }
-
-  @Get('email-activation-proxy/:activationKey')
-  @UseRequestValidation()
-  @UseResponseSerializer(ActivationUserResponseDTO)
-  @ApiOkResponse({ type: ActivationUserResponseDTO })
-  @ApiException(() => ActivationKeyNotValidException)
-  async activationProxy(
-    @Param() activationDTO: UserActivationKeyDTO,
-  ): Promise<UserActivationKey> {
-    const { data } = await firstValueFrom(
-      this.httpService
-        .post(
-          `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/activate/${activationDTO.activationKey}`,
-        )
-        .pipe(
-          catchError((error: AxiosError) => {
-            throw new HttpException(error.response.data, error.response.status);
-          }),
-        ),
-    );
-    return data;
   }
 
   @Post('pass-recovery-init/:email')
@@ -145,5 +140,28 @@ export class UserController {
     @Body() recoveryDto: RecoveryPasswordDTO,
   ): Promise<User> {
     return await this.userService.finishPasswordRecovering(recoveryDto);
+  }
+
+  // Temporary: for activation link from email -> redirect from GET to POST api
+  @Get('email-activation-proxy/:activationKey')
+  @UseRequestValidation()
+  @UseResponseSerializer(ActivationUserResponseDTO)
+  @ApiOkResponse({ type: ActivationUserResponseDTO })
+  @ApiException(() => ActivationKeyNotValidException)
+  async activationProxy(
+    @Param() activationDTO: UserActivationKeyDTO,
+  ): Promise<UserActivationKey> {
+    const { data } = await firstValueFrom(
+      this.httpService
+        .post(
+          `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/activate/${activationDTO.activationKey}`,
+        )
+        .pipe(
+          catchError((error: AxiosError) => {
+            throw new HttpException(error.response.data, error.response.status);
+          }),
+        ),
+    );
+    return data;
   }
 }

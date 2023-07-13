@@ -1,67 +1,91 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { ProfileIdDTO } from './dto/params.dto';
-import { AssetsService } from 'src/assets/assets.service';
-import { IGetByIdOptions, IProfileService } from './types';
-import { ProfileDTO } from './dto/profile.dto';
-import {
-  AvatarDoesNotExistException,
-  ProfileAlreadyNotExistException,
-  ProfileDoesNotExistException,
-} from './profile.exceptions';
-import { Prisma } from '@prisma/client';
+import { Profile, User } from '@prisma/client';
+import { ProfileRepository } from './profile.repository';
+import { CreateProfileInput } from './types';
+import { ConfigService } from '@nestjs/config';
+import { IPathConfig } from 'src/config/path.congfig';
+import { PATH_CONFIG } from 'src/config/const';
+import { mkdir, unlink } from 'fs/promises';
+import { join } from 'path';
+import { path } from 'app-root-path';
+import * as sharp from 'sharp';
+import { existsSync } from 'fs';
 
 @Injectable()
-export class ProfileService implements IProfileService {
+export class ProfileService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly assetsService: AssetsService,
+    private readonly profileRepository: ProfileRepository,
+    private readonly configService: ConfigService,
   ) {}
+  private readonly config = this.configService.get<IPathConfig>(PATH_CONFIG);
 
-  public async getProfile(
-    input: Prisma.ProfileWhereUniqueInput,
-    options?: IGetByIdOptions,
-  ) {
-    const profile = await this.prisma.profile.findUnique({
-      where: this.profileUniqueInput(input),
+  async onModuleInit() {
+    await mkdir(join(path, this.config.assetsPath, this.config.avatarDir), {
+      recursive: true,
     });
-    if (!profile && options?.throwOnNotFound)
-      throw new ProfileDoesNotExistException();
-    if (profile && options?.throwOnFound)
-      throw new ProfileAlreadyNotExistException();
-    return ProfileDTO.fromPrisma(profile, this.assetsService);
   }
 
-  public async update(updateDto: UpdateProfileDTO, dtoId: ProfileIdDTO) {
-    await this.getProfile(dtoId, { throwOnNotFound: true });
-    if (updateDto.avatar) {
-      updateDto.path = await this.assetsService.saveAvatar(
-        updateDto.avatar.buffer,
-        dtoId.id,
-      );
+  /**
+   * Create Profile and connect him to User Entity, return Profile
+   * @param {User} user new User entity without Profile
+   * @param {GetUniqueProfileInput} input data for creating new Profile entity
+   * @returns {Promise<Profile>} Profile entity
+   **/
+  public async create(user: User, input: CreateProfileInput): Promise<Profile> {
+    return await this.profileRepository.save(user, input);
+  }
+
+  /**
+   * Get one Profile by Id or throw if it's not exists
+   * @param {GetPartialUniqueUserInput} dto Accept only one unique User search key!
+   * @return {Promise<Profile>} Profile entity
+   * @throws {ProfileDoesNotExistsException}
+   **/
+  public async getById(dto: ProfileIdDTO): Promise<Profile> {
+    return await this.profileRepository.getUnique({ id: dto.id });
+  }
+
+  /**
+   * Update one Profile by Id or throw if it's not exists
+   * @param {ProfileIdDTO} dtoId Accept only one unique User search key!
+   * @param {UpdateProfileDTO} updateDto
+   * @return {Promise<Profile>} Profile entity
+   * @throws {ProfileDoesNotExistsException}
+   **/
+  public async update(
+    dtoId: ProfileIdDTO,
+    updateDto: UpdateProfileDTO,
+  ): Promise<Profile> {
+    let fileName: Profile['avatar'] | null = dtoId.id + '.jpg';
+    if (typeof updateDto.avatar === 'object') {
+      this.writeAvatar(updateDto.avatar.buffer, fileName);
     }
-    const profile = await this.prisma.profile.update(
-      updateDto.updateProfileInput(dtoId.id),
-    );
-    return ProfileDTO.fromPrisma(profile, this.assetsService);
+    if (updateDto.avatar === '') {
+      this.deleteAvatar(fileName);
+      fileName = null;
+    }
+    return await this.profileRepository.updateUnique(dtoId, {
+      ...updateDto,
+      avatar: fileName,
+    });
   }
 
-  public async deleteAvatar(dto: ProfileIdDTO) {
-    const { avatar } = await this.getProfile(dto, { throwOnNotFound: true });
-    if (!avatar) throw new AvatarDoesNotExistException();
-    await this.assetsService.deleteAvatar(avatar);
-    const profile = await this.prisma.profile.update({
-      where: { id: dto.id },
-      data: { avatar: null },
-    });
-    return ProfileDTO.fromPrisma(profile, this.assetsService);
+  private async writeAvatar(fileBuffer: Buffer, fileName: string) {
+    await sharp(fileBuffer).jpeg().toFile(this.defineAvatarPath(fileName));
   }
 
-  private profileUniqueInput(input: Prisma.ProfileWhereUniqueInput) {
-    const { id } = input;
-    return Prisma.validator<Prisma.UserWhereUniqueInput>()({
-      id,
-    });
+  private async deleteAvatar(fileName: string) {
+    const filePath = this.defineAvatarPath(fileName);
+    if (existsSync(filePath)) await unlink(filePath);
+  }
+
+  private defineAvatarPath(fileName: string) {
+    return join(path, this.config.assetsPath, this.config.avatarDir, fileName);
+  }
+
+  public defineAvatarURN(fileName: string) {
+    return join(this.config.assetsPath, this.config.avatarDir, fileName);
   }
 }

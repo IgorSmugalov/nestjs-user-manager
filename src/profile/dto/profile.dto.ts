@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Profile } from '@prisma/client';
-import { Expose, TransformPlainToInstance } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { IsDate, IsString, IsUUID, MinLength } from 'class-validator';
-import { AssetsService } from 'src/assets/assets.service';
 
 export class ProfileDTO implements Profile {
   @Expose()
@@ -30,20 +29,8 @@ export class ProfileDTO implements Profile {
   @Expose()
   updatedAt: Date;
 
-  @ApiProperty({ type: 'string', format: 'binary' })
+  @ApiProperty()
   @IsString()
   @Expose()
   avatar: string;
-
-  @TransformPlainToInstance(ProfileDTO, {
-    strategy: 'excludeAll',
-  })
-  static fromPrisma(
-    profile: Profile,
-    assetsService: AssetsService,
-  ): ProfileDTO {
-    if (profile?.avatar)
-      profile.avatar = assetsService.getAvatarPath(profile.avatar);
-    return profile;
-  }
 }

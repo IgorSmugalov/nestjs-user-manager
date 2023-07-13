@@ -7,7 +7,7 @@ import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
 import { MailerService } from 'src/mailer/mailer.service';
 import * as uuid from 'uuid';
-import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
+import { SignInDTO } from './dto/sign-in.dto';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
@@ -23,6 +23,7 @@ import {
   UserAlreadyActivatedException,
 } from './user.exceptions';
 import { UserRepository } from './user.repository';
+import { ProfileService } from 'src/profile/profile.service';
 
 @Injectable()
 export class UserService {
@@ -31,23 +32,37 @@ export class UserService {
     private readonly hashService: HashService,
     private readonly mailerService: MailerService,
     private readonly userRepository: UserRepository,
+    private readonly profileService: ProfileService,
   ) {}
   private config = this.configService.get<IUserConfig>(USER_CONFIG);
 
-  public async signIn(dto: CreateUserAndProfileDTO) {
+  /**
+   * @description
+   * Complex Sign In UseCase, includes next steps:
+   * 1) Create user account,
+   * 2) Create profile and connect to user,
+   * 3) Send activation message
+   * @param {SignInDTO} dto
+   * @return {Promise<User>} Unsafe User Entity
+   * @throws {UserAlreadyActivatedException}
+   **/
+  public async signIn(dto: SignInDTO): Promise<User> {
     dto.password = await this.hashService.hashPassword(dto.password);
     const user = await this.userRepository.save(dto);
+    const profile = await this.profileService.create(user, dto);
+    user.userProfileId = profile.id;
     await this.mailerService.sendActivationMessage(user);
     return user;
   }
 
   /**
-   * Get one User by id | email or throw User Does Not Exists Exception
-   * @param {GetPartialUniqueUserInput} dto - Accept only one unique search key!
+   * @description
+   * Get one User by id | email or throw if user is not exists
+   * @param {GetPartialUniqueUserInput} dto Accept only one unique User search key!
+   * @return {Promise<User>} Unsafe User Entity
+   * @throws {UserDoesNotExistsException}
    **/
   public async getUnique(dto: GetPartialUniqueUserInput): Promise<User> {
-    const { id, email } = dto;
-    if (id && email) dto.email = undefined;
     return await this.userRepository.getUnique(dto);
   }
 

@@ -37,7 +37,7 @@ export class AuthService {
       throw new IncorrectCredentialsException();
     }
     this.isCanAuth(user);
-    const profile = await this.profileService.getProfile({
+    const profile = await this.profileService.getById({
       id: user.userProfileId,
     });
     const accessToken = await this.accessJwtService.signJwt(user, profile);
@@ -48,7 +48,7 @@ export class AuthService {
   public async authByRefreshToken(userClaims: RefreshJwtClaimsDTO) {
     const user = await this.userService.getUnique({ id: userClaims.id });
     if (!user) throw new UserUnauthorizedException();
-    const profile = await this.profileService.getProfile({
+    const profile = await this.profileService.getById({
       id: user.userProfileId,
     });
     this.isCanAuth(user);

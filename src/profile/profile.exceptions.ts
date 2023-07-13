@@ -6,13 +6,13 @@ export enum ProfileExceptionMessages {
   avatarDoesNotExist = 'Аватар отсутствует',
 }
 
-export class ProfileDoesNotExistException extends BadRequestException {
+export class ProfileDoesNotExistsException extends BadRequestException {
   constructor() {
     super(ProfileExceptionMessages.profileDoesNotExist);
   }
 }
 
-export class ProfileAlreadyNotExistException extends BadRequestException {
+export class ProfileAlreadyExistException extends BadRequestException {
   constructor() {
     super(ProfileExceptionMessages.profileAlreadyExist);
   }

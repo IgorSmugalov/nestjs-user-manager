@@ -23,7 +23,7 @@ import { IServerConfig } from 'src/config/server.congfig';
 import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
-import { CreateUserAndProfileDTO } from './dto/create-user-and-profile.dto';
+import { SignInDTO } from './dto/sign-in.dto';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
@@ -57,14 +57,14 @@ export class UserController {
   private readonly serverConfig =
     this.configService.get<IServerConfig>(SERVER_CONFIG);
 
-  @Post('register')
+  @Post('sign-in')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
-  @ApiBody({ type: CreateUserAndProfileDTO })
+  @ApiBody({ type: SignInDTO })
   @ApiCreatedResponse({ type: UserResponseDTO })
   @ApiException(() => UserAlreadyExistsException)
-  async register(@Body() createDto: CreateUserAndProfileDTO): Promise<User> {
-    return await this.userService.signIn(createDto);
+  async register(@Body() signInDto: SignInDTO): Promise<User> {
+    return await this.userService.signIn(signInDto);
   }
 
   @Get(':id')

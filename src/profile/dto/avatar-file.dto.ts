@@ -1,24 +1,13 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { AvatarFile } from '../types';
-import { ApiProperty } from '@nestjs/swagger';
 import { IsImage } from 'src/lib/validation/isImage.validator';
-import { Allow } from 'class-validator';
+import { ValidateIf } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class AvatarFileDTO implements AvatarFile {
   @Expose()
   @IsImage()
-  @Allow()
+  @ValidateIf((_, value) => value !== '')
   @ApiProperty({ type: 'string', format: 'binary' })
-  avatar: Express.Multer.File;
-
-  @Exclude({ toClassOnly: true })
-  private _avatarPath: string;
-
-  public get path(): string {
-    return this._avatarPath;
-  }
-
-  public set path(avatarPath: string) {
-    this._avatarPath = avatarPath;
-  }
+  avatar: '' | string | Express.Multer.File;
 }

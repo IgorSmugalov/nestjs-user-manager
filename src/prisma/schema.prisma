@@ -21,8 +21,8 @@ model User {
   recoveryPasswordKey        String?        @unique
   recoveryPasswordKeyCreated DateTime?
   // 
-  userProfileId              String         @unique
-  userProfile                Profile        @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userProfileId              String?        @unique
+  userProfile                Profile?       @relation(fields: [userProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   // 
   refreshTokens              RefreshToken[]
   // 

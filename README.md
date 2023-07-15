@@ -1,10 +1,16 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+<h1 align="center"> User Manager</h1>
+<p align="center">[WIP] PetProject</p>
 
-# Description
+# Stack
 
-[Nest](https://github.com/nestjs/nest) for local development with Prisma, PostgreSQL, Docker
+- **Platform**: TypeScript
+- **Framework**: NestJs
+- **Protocol**: REST
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Auth**: JWT & RBAC
+- **Run**: Docker & Docker-compose
+- **Other**: Swagger, JsDoc, JWK, Jose, NodeMailer, FakeSMTP, Handlebars
 
 # Usage
 

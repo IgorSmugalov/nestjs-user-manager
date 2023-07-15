@@ -9,7 +9,10 @@ import { IServerConfig } from 'src/config/server.congfig';
 import { join } from 'path';
 import { path } from 'app-root-path';
 import { EmailCanNotBeSentException } from './mailer.exceptions';
-import { User } from '@prisma/client';
+import {
+  ActivationMessageDTO,
+  RecoveryPassMessageDTO,
+} from 'src/events/user-messages.dto';
 
 @Injectable()
 export class MailerService {
@@ -48,7 +51,9 @@ export class MailerService {
     }
   }
 
-  public async sendActivationMessage(user: User): Promise<string> {
+  public async sendActivationMessage(
+    user: ActivationMessageDTO,
+  ): Promise<string> {
     const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/email-activation-proxy/${user.activationKey}`;
     const message: Mail.Options & hbs.TemplateOptions = {
       from: 'noreply@users-app.fake',
@@ -66,7 +71,9 @@ export class MailerService {
     return messageId;
   }
 
-  public async sendPasswordRecoveryMessage(user: User): Promise<string> {
+  public async sendPasswordRecoveryMessage(
+    user: RecoveryPassMessageDTO,
+  ): Promise<string> {
     const link = `${this.serverConfig.protocol}://${this.serverConfig.host}:${this.serverConfig.port}/user/pass-recovery/${user.recoveryPasswordKey}`;
     const message: Mail.Options & hbs.TemplateOptions = {
       from: 'noreply@users-app.fake',

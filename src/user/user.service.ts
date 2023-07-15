@@ -5,7 +5,6 @@ import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { USER_CONFIG } from 'src/config/const';
 import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
-import { MailerService } from 'src/mailer/mailer.service';
 import * as uuid from 'uuid';
 import { SignUpDTO } from './dto/sign-up.dto';
 import {
@@ -24,15 +23,21 @@ import {
 } from './user.exceptions';
 import { UserRepository } from './user.repository';
 import { ProfileService } from 'src/profile/profile.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserEvent } from 'src/events/events';
+import {
+  ActivationMessageDTO,
+  RecoveryPassMessageDTO,
+} from 'src/events/user-messages.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly configService: ConfigService,
     private readonly hashService: HashService,
-    private readonly mailerService: MailerService,
     private readonly userRepository: UserRepository,
     private readonly profileService: ProfileService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   private config = this.configService.get<IUserConfig>(USER_CONFIG);
 
@@ -51,7 +56,7 @@ export class UserService {
     const user = await this.userRepository.save(dto);
     const profile = await this.profileService.create(user, dto);
     user.userProfileId = profile.id;
-    await this.mailerService.sendActivationMessage(user);
+    this.eventEmitter.emit(UserEvent.signUp, new ActivationMessageDTO(user));
     return user;
   }
 
@@ -117,7 +122,10 @@ export class UserService {
         activationKey: uuid.v4(),
       },
     );
-    await this.mailerService.sendActivationMessage(user);
+    this.eventEmitter.emit(
+      UserEvent.recoveryPassword,
+      new ActivationMessageDTO(user),
+    );
     return user;
   }
 
@@ -129,7 +137,10 @@ export class UserService {
       recoveryPasswordKey: uuid.v4(),
       recoveryPasswordKeyCreated: new Date(),
     });
-    await this.mailerService.sendPasswordRecoveryMessage(user);
+    this.eventEmitter.emit(
+      UserEvent.recoveryPassword,
+      new RecoveryPassMessageDTO(user),
+    );
     return user;
   }
 

@@ -10,7 +10,7 @@
 - **ORM**: Prisma
 - **Auth**: JWT & RBAC
 - **Run**: Docker & Docker-compose
-- **Other**: Swagger, JsDoc, JWK, Jose, NodeMailer, FakeSMTP, Handlebars
+- **Other**: EventEmitter, Swagger, JsDoc, JWK, Jose, NodeMailer, FakeSMTP, Handlebars
 
 # Usage
 

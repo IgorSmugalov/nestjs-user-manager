@@ -5,8 +5,8 @@ import { Profile, User } from '@prisma/client';
 import { ProfileRepository } from './profile.repository';
 import { CreateProfileInput } from './types';
 import { ConfigService } from '@nestjs/config';
-import { IPathConfig } from 'src/config/path.congfig';
-import { PATH_CONFIG } from 'src/config/const';
+import { IAssetsConfig } from 'src/config/assets.congfig';
+import { ASSETS_CONFIG } from 'src/config/const';
 import { mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { path } from 'app-root-path';
@@ -19,10 +19,11 @@ export class ProfileService {
     private readonly profileRepository: ProfileRepository,
     private readonly configService: ConfigService,
   ) {}
-  private readonly config = this.configService.get<IPathConfig>(PATH_CONFIG);
+  private readonly config =
+    this.configService.get<IAssetsConfig>(ASSETS_CONFIG);
 
   async onModuleInit() {
-    await mkdir(join(path, this.config.assetsPath, this.config.avatarDir), {
+    await mkdir(join(path, this.config.assetsDir, this.config.avatarDir), {
       recursive: true,
     });
   }
@@ -49,6 +50,7 @@ export class ProfileService {
 
   /**
    * Update one Profile by Id or throw if it's not exists
+   * Set avatar === '' for deleting image
    * @param {ProfileIdDTO} dtoId Accept only one unique User search key!
    * @param {UpdateProfileDTO} updateDto
    * @return {Promise<Profile>} Profile entity
@@ -72,6 +74,15 @@ export class ProfileService {
     });
   }
 
+  /**
+   * Define full avatar path for access from web application
+   * @param {string} fileName
+   * @return {string} pass to image
+   **/
+  public defineAvatarURN(fileName: string): string {
+    return join(this.config.assetsDir, this.config.avatarDir, fileName);
+  }
+
   private async writeAvatar(fileBuffer: Buffer, fileName: string) {
     await sharp(fileBuffer).jpeg().toFile(this.defineAvatarPath(fileName));
   }
@@ -82,10 +93,6 @@ export class ProfileService {
   }
 
   private defineAvatarPath(fileName: string) {
-    return join(path, this.config.assetsPath, this.config.avatarDir, fileName);
-  }
-
-  public defineAvatarURN(fileName: string) {
-    return join(this.config.assetsPath, this.config.avatarDir, fileName);
+    return join(path, this.config.assetsDir, this.config.avatarDir, fileName);
   }
 }

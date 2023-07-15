@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignUpInput, GetUniqueUserInput } from './types';
+import { SignInInput, GetUniqueUserInput } from './types';
 import { Class, Exact } from 'type-fest';
 import {
   UserAlreadyExistsException,
@@ -16,7 +16,7 @@ import {
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async save(input: SignUpInput) {
+  public async save(input: SignInInput) {
     const { email, password } = input;
     try {
       return await this.prisma.user.create({
@@ -39,7 +39,7 @@ export class UserRepository {
   ): Promise<User | never> {
     let user: User | null;
     try {
-      return await this.prisma.user.findUnique({ where });
+      user = await this.prisma.user.findUnique({ where });
     } catch (error) {
       this.parseError(error);
     }

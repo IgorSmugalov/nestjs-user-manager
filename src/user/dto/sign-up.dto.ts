@@ -1,5 +1,5 @@
 import { IntersectionType, PickType } from '@nestjs/swagger';
-import { SignUpInput } from '../types';
+import { SignInInput } from '../types';
 import { CreateProfileDTO } from 'src/profile/dto/create-profile.dto';
 import { UserDTO } from './user.dto';
 
@@ -8,4 +8,4 @@ class PartialProfile extends PickType(CreateProfileDTO, ['name', 'surname']) {}
 
 export class SignUpDTO
   extends IntersectionType(PartialUser, PartialProfile)
-  implements SignUpInput {}
+  implements SignInInput {}

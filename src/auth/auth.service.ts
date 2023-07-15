@@ -3,17 +3,19 @@ import { CredentialsDTO } from './dto/credentials.dto';
 import { HashService } from 'src/crypto/hash.service';
 import {
   IncorrectCredentialsException,
+  IncorrectRefreshTokenException,
   UserNotActivatedException,
-  UserUnauthorizedException,
 } from './auth.exceptions';
 import { Request, Response } from 'express';
 import { AccessJwtService } from './access-jwt.service';
 import { RefreshJwtService } from './refresh-jwt.service';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { UserService } from 'src/user/user.service';
-import { TokensDTO } from './dto/auth-data.dto';
+import { TokensDTO } from './dto/tokens.dto';
 import { ProfileService } from 'src/profile/profile.service';
 import { User } from '@prisma/client';
+import { Tokens } from './types';
+import { UserId } from 'src/user/types';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +27,15 @@ export class AuthService {
     private readonly refreshJwtService: RefreshJwtService,
   ) {}
 
-  public async authByCredentials(userCredentials: CredentialsDTO) {
+  /**
+   * SignIn by login and password
+   * @param {CredentialsDTO} userCredentials
+   * @returns {Promise<Tokens>}
+   * @throws {IncorrectCredentialsException, UserNotActivatedException}
+   */
+  public async authByCredentials(
+    userCredentials: CredentialsDTO,
+  ): Promise<Tokens> {
     const { email, password } = userCredentials;
     let user: User | null;
     try {
@@ -45,9 +55,21 @@ export class AuthService {
     return new TokensDTO({ accessToken, refreshToken });
   }
 
-  public async authByRefreshToken(userClaims: RefreshJwtClaimsDTO) {
-    const user = await this.userService.getUnique({ id: userClaims.id });
-    if (!user) throw new UserUnauthorizedException();
+  /**
+   * SignIn by refresh token
+   * @param {RefreshJwtClaimsDTO} userClaims
+   * @returns {Promise<Tokens>}
+   * @throws {IncorrectRefreshTokenException, UserNotActivatedException}
+   */
+  public async authByRefreshToken(
+    userClaims: RefreshJwtClaimsDTO,
+  ): Promise<Tokens> {
+    let user: User | null;
+    try {
+      user = await this.userService.getUnique({ id: userClaims.id });
+    } catch {
+      throw new IncorrectRefreshTokenException();
+    }
     const profile = await this.profileService.getById({
       id: user.userProfileId,
     });
@@ -58,9 +80,17 @@ export class AuthService {
     return new TokensDTO({ accessToken, refreshToken });
   }
 
-  public async logout(user: RefreshJwtClaimsDTO) {
-    await this.refreshJwtService.removeJwtFromWhitelist(user);
-    return;
+  /**
+   * SignOut
+   * Remove stored in whitelist refresh token
+   * @param {RefreshJwtClaimsDTO} userClaims
+   * @returns {Promise<UserId>}
+   */
+  public async logout(userClaims: RefreshJwtClaimsDTO): Promise<UserId> {
+    const result = await this.refreshJwtService.removeJwtFromWhitelist(
+      userClaims,
+    );
+    return { id: result.UserId };
   }
 
   public setAuthCookie(response: Response, refreshToken: string) {

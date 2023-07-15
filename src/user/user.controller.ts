@@ -23,7 +23,7 @@ import { IServerConfig } from 'src/config/server.congfig';
 import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
-import { SignInDTO } from './dto/sign-in.dto';
+import { SignUpDTO } from './dto/sign-up.dto';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
@@ -47,7 +47,7 @@ import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
 import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
 
 @Controller('user')
-@ApiTags('User')
+// @ApiTags('User')
 export class UserController {
   constructor(
     private userService: UserService,
@@ -57,16 +57,18 @@ export class UserController {
   private readonly serverConfig =
     this.configService.get<IServerConfig>(SERVER_CONFIG);
 
-  @Post('sign-in')
+  @ApiTags('User')
+  @Post('sign-up')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
-  @ApiBody({ type: SignInDTO })
+  @ApiBody({ type: SignUpDTO })
   @ApiCreatedResponse({ type: UserResponseDTO })
   @ApiException(() => UserAlreadyExistsException)
-  async register(@Body() signInDto: SignInDTO): Promise<User> {
-    return await this.userService.signIn(signInDto);
+  async register(@Body() signUpDto: SignUpDTO): Promise<User> {
+    return await this.userService.signUp(signUpDto);
   }
 
+  @ApiTags('User')
   @Get(':id')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
@@ -76,6 +78,30 @@ export class UserController {
     return await this.userService.getUnique(userId);
   }
 
+  @ApiTags('User/activation')
+  @Post('activate/:activationKey')
+  @UseRequestValidation()
+  @UseResponseSerializer(ActivationUserResponseDTO)
+  @ApiCreatedResponse({ type: ActivationUserResponseDTO })
+  @ApiException(() => ActivationKeyNotValidException)
+  async activate(@Param() activationDTO: UserActivationKeyDTO): Promise<User> {
+    return await this.userService.acivateByKey(activationDTO);
+  }
+
+  @ApiTags('User/activation')
+  @Post('renew-activation-key/:email')
+  @UseRequestValidation()
+  @UseResponseSerializer(ActivationUserResponseDTO)
+  @ApiCreatedResponse({ type: ActivationUserResponseDTO })
+  @ApiException(() => [
+    UserAlreadyActivatedException,
+    UserDoesNotExistsException,
+  ])
+  async renewActivationKey(@Param() emailDto: UserEmailDTO) {
+    return await this.userService.renewActivationKey(emailDto);
+  }
+
+  @ApiTags('User/password')
   @Post('update-password')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
@@ -89,27 +115,7 @@ export class UserController {
     return await this.userService.updatePassword(userDto, updateDto);
   }
 
-  @Post('activate/:activationKey')
-  @UseRequestValidation()
-  @UseResponseSerializer(ActivationUserResponseDTO)
-  @ApiCreatedResponse({ type: ActivationUserResponseDTO })
-  @ApiException(() => ActivationKeyNotValidException)
-  async activate(@Param() activationDTO: UserActivationKeyDTO): Promise<User> {
-    return await this.userService.acivateByKey(activationDTO);
-  }
-
-  @Post('renew-activation-key/:email')
-  @UseRequestValidation()
-  @UseResponseSerializer(ActivationUserResponseDTO)
-  @ApiCreatedResponse({ type: ActivationUserResponseDTO })
-  @ApiException(() => [
-    UserAlreadyActivatedException,
-    UserDoesNotExistsException,
-  ])
-  async renewActivationKey(@Param() emailDto: UserEmailDTO) {
-    return await this.userService.renewActivationKey(emailDto);
-  }
-
+  @ApiTags('User/password')
   @Post('pass-recovery-init/:email')
   @UseRequestValidation()
   @UseResponseSerializer(UserEmailDTO)
@@ -119,6 +125,7 @@ export class UserController {
     return await this.userService.initPasswordRecovering(emailDto);
   }
 
+  @ApiTags('User/password')
   @Get('pass-recovery/:recoveryPasswordKey')
   @UseRequestValidation()
   @UseResponseSerializer(UserRecoveryPasswordKeyDTO)
@@ -130,6 +137,7 @@ export class UserController {
     return await this.userService.validatePasswordRecoveryKey(keyDto);
   }
 
+  @ApiTags('User/password')
   @Post('pass-recovery')
   @UseRequestValidation()
   @UseResponseSerializer(UserEmailDTO)
@@ -143,6 +151,7 @@ export class UserController {
   }
 
   // Temporary: for activation link from email -> redirect from GET to POST api
+  @ApiTags('User/activation')
   @Get('email-activation-proxy/:activationKey')
   @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)

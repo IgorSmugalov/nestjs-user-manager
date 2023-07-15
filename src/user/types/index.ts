@@ -6,7 +6,7 @@ type CreateUserInput = Prisma.UserGetPayload<{
   select: { email: true; password: true };
 }>;
 
-export type SignInInput = CreateUserInput & CreateProfileInput;
+export type SignUpInput = CreateUserInput & CreateProfileInput;
 
 export type CreateUserResponse = Prisma.UserGetPayload<{
   select: { email: true };

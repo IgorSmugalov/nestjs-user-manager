@@ -7,10 +7,15 @@ import { RefreshedAccess } from './decorators/refreshed-access.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { TokensDTO } from './dto/auth-data.dto';
-import { OnlyPublicAccess } from './decorators/public-access.decorator';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { IncorrectCredentialsException } from './auth.exceptions';
+import {
+  IncorrectCredentialsException,
+  IncorrectRefreshTokenException,
+  UserNotActivatedException,
+} from './auth.exceptions';
+import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
+import { AuthSignInResponseDTO } from './dto/auth-sign-in-response.dto';
+import { AuthSignOutResponseDTO } from './dto/auth-sign-out-response.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -18,24 +23,33 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('login')
-  @OnlyPublicAccess()
   @UseRequestValidation()
+  @UseResponseSerializer(AuthSignInResponseDTO)
   @ApiBody({ type: CredentialsDTO })
-  @ApiCreatedResponse({ type: TokensDTO })
-  @ApiException(() => IncorrectCredentialsException)
+  @ApiCreatedResponse({ type: AuthSignInResponseDTO })
+  @ApiException(() => [
+    IncorrectCredentialsException,
+    IncorrectRefreshTokenException,
+    UserNotActivatedException,
+  ])
   async login(
     @Body() userCredentialsDTO: CredentialsDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.auth.authByCredentials(userCredentialsDTO);
     this.auth.setAuthCookie(res, tokens.refreshToken);
-    return new TokensDTO(tokens);
+    return tokens;
   }
 
   @Post('refresh')
   @RefreshedAccess()
   @UseRequestValidation()
-  @ApiCreatedResponse({ type: TokensDTO })
+  @UseResponseSerializer(AuthSignInResponseDTO)
+  @ApiCreatedResponse({ type: AuthSignInResponseDTO })
+  @ApiException(() => [
+    IncorrectRefreshTokenException,
+    UserNotActivatedException,
+  ])
   async refresh(
     @RefreshedUser() user: RefreshJwtClaimsDTO,
     @Res({ passthrough: true }) res: Response,
@@ -48,12 +62,13 @@ export class AuthController {
   @Post('logout')
   @RefreshedAccess()
   @UseRequestValidation()
+  @UseResponseSerializer(AuthSignOutResponseDTO)
+  @ApiCreatedResponse({ type: AuthSignOutResponseDTO })
   async logout(
     @RefreshedUser() user: RefreshJwtClaimsDTO,
     @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
     this.auth.clearAuthCookie(res);
-    await this.auth.logout(user);
-    return 'ok';
+    return await this.auth.logout(user);
   }
 }

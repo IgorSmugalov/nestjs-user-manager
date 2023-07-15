@@ -7,7 +7,7 @@ import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
 import { MailerService } from 'src/mailer/mailer.service';
 import * as uuid from 'uuid';
-import { SignInDTO } from './dto/sign-in.dto';
+import { SignUpDTO } from './dto/sign-up.dto';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
@@ -42,11 +42,11 @@ export class UserService {
    * 1) Create user account,
    * 2) Create profile and connect to user,
    * 3) Send activation message
-   * @param {SignInDTO} dto
+   * @param {SignUpDTO} dto
    * @return {Promise<User>} Unsafe User Entity
    * @throws {UserAlreadyActivatedException}
    **/
-  public async signIn(dto: SignInDTO): Promise<User> {
+  public async signUp(dto: SignUpDTO): Promise<User> {
     dto.password = await this.hashService.hashPassword(dto.password);
     const user = await this.userRepository.save(dto);
     const profile = await this.profileService.create(user, dto);

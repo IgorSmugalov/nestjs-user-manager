@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignInInput, GetUniqueUserInput } from './types';
+import { SignUpInput, GetUniqueUserInput } from './types';
 import { Class, Exact } from 'type-fest';
 import {
   UserAlreadyExistsException,
@@ -16,7 +16,7 @@ import {
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async save(input: SignInInput) {
+  public async save(input: SignUpInput) {
     const { email, password } = input;
     try {
       return await this.prisma.user.create({

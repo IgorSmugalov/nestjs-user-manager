@@ -1,10 +1,14 @@
-import { Prisma, Profile } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { RegisteredJwtClaims } from '../dto/jwt-claims-registered.dto';
+import { UserId } from 'src/user/types';
 
 export interface Tokens {
   accessToken: string;
   refreshToken: string;
 }
+
+export type AuthSignInResponse = Pick<Tokens, 'accessToken'>;
+export type AuthSignOutResponse = UserId;
 
 // Access Jwt
 
@@ -29,20 +33,3 @@ type RefreshCustomClaims = Prisma.UserGetPayload<{
 }>;
 
 export type RefreshJwtClaims = RefreshRegisteredClaims & RefreshCustomClaims;
-
-export type AuthResponseUserPart = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    email: true;
-    activated: true;
-    createdAt: true;
-    updatedAt: true;
-    userProfileId: true;
-  };
-}>;
-
-export type AuthResult = {
-  user: AuthResponseUserPart;
-  profile: Profile;
-  tokens: Tokens;
-};

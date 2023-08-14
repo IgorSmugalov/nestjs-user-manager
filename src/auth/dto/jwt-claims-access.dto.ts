@@ -13,7 +13,11 @@ class PartialProfileEntity extends PickType(ProfileDTO, [
   'surname',
 ]) {}
 
-class PartialUserEntity extends PickType(UserDTO, ['id', 'activated']) {}
+class PartialUserEntity extends PickType(UserDTO, [
+  'id',
+  'activated',
+  'roles',
+]) {}
 
 class PartialRegisteredClaims extends PickType(RegisteredJwtClaimsDTO, [
   'exp',

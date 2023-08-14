@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { Expose } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
   IsEmail,
+  IsEnum,
   IsString,
   IsStrongPassword,
   IsUUID,
@@ -31,6 +32,10 @@ export class UserDTO implements User {
   })
   @ApiProperty()
   password: string;
+
+  @Expose()
+  @IsEnum(Role, { each: true })
+  roles: Role[];
 
   @Expose()
   @IsBoolean()

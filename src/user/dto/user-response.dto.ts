@@ -6,6 +6,7 @@ export class UserResponseDTO
   extends PickType(UserDTO, [
     'id',
     'email',
+    'roles',
     'activated',
     'createdAt',
     'updatedAt',

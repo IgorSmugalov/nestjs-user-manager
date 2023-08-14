@@ -7,6 +7,8 @@ import {
   HttpException,
   Param,
   Post,
+  SetMetadata,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -15,7 +17,7 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { SERVER_CONFIG } from 'src/config/const';
@@ -24,12 +26,7 @@ import { UseResponseSerializer } from 'src/lib/serialization/use-response-serial
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
 import { SignUpDTO } from './dto/sign-up.dto';
-import {
-  UserActivationKeyDTO,
-  UserEmailDTO,
-  UserIdDTO,
-  UserRecoveryPasswordKeyDTO,
-} from './dto/params.dto';
+
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { UserResponseDTO } from './dto/user-response.dto';
 import {
@@ -45,9 +42,17 @@ import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
 import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
+import { OWNER_KEY, ROLES_KEY } from 'src/lib/permissions/const';
+import { AuthorizedAccess } from 'src/auth/decorators/authorized-access.decorator';
+import {
+  UserActivationKeyDTO,
+  UserEmailDTO,
+  UserIdDTO,
+  UserRecoveryPasswordKeyDTO,
+} from './dto';
+import { GetOwnerID, AuthorizeGuard } from 'src/lib/permissions';
 
 @Controller('user')
-// @ApiTags('User')
 export class UserController {
   constructor(
     private userService: UserService,
@@ -70,6 +75,10 @@ export class UserController {
 
   @ApiTags('User')
   @Get(':id')
+  @SetMetadata<string, Role[]>(ROLES_KEY, [Role.user])
+  @SetMetadata<string, GetOwnerID>(OWNER_KEY, (request) => request.params.id)
+  @UseGuards(AuthorizeGuard)
+  @AuthorizedAccess()
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiOkResponse({ type: UserResponseDTO })
@@ -150,7 +159,7 @@ export class UserController {
     return await this.userService.finishPasswordRecovering(recoveryDto);
   }
 
-  // Temporary: for activation link from email -> redirect from GET to POST api
+  // Temporary: for activation link from email -> redirect from GET to POST api, in future this logic can be moved to frontend
   @ApiTags('User/activation')
   @Get('email-activation-proxy/:activationKey')
   @UseRequestValidation()

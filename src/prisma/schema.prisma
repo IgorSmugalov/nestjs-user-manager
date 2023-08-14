@@ -15,6 +15,7 @@ model User {
   id                         String         @id @default(uuid())
   email                      String         @unique
   password                   String
+  roles                      Role[]         @default([user])
   activated                  Boolean        @default(false)
   activationKey              String?        @unique @default(uuid())
   activationKeyCreated       DateTime?      @default(now())
@@ -28,6 +29,14 @@ model User {
   // 
   createdAt                  DateTime       @default(now())
   updatedAt                  DateTime       @updatedAt
+}
+
+enum Role {
+  user
+  admin
+  superadmin
+
+  @@map("Roles")
 }
 
 model RefreshToken {

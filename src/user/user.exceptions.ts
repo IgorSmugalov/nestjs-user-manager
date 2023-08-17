@@ -4,9 +4,10 @@ import {
 } from '@nestjs/common';
 
 export enum UserExceptionMessages {
-  userUnknownErrorException = 'Неизвестная ошибка',
+  userUnknownError = 'Неизвестная ошибка',
   userAlreadyExistst = 'Пользователь уже существует',
   userDoesNotExistst = 'Пользователь не существует',
+  emailAlreadyInUse = 'Email уже используется',
   activationKeyNotValid = 'Ключ активации не валиден',
   userAlreadyActivated = 'Пользователь уже активирован',
   passwordRecoveryKeyNotValid = 'Ключ восстановления пароля не валиден',
@@ -15,13 +16,19 @@ export enum UserExceptionMessages {
 
 export class UserUnknownErrorException extends InternalServerErrorException {
   constructor() {
-    super(UserExceptionMessages.userUnknownErrorException);
+    super(UserExceptionMessages.userUnknownError);
   }
 }
 
 export class UserAlreadyExistsException extends BadRequestException {
   constructor() {
     super(UserExceptionMessages.userAlreadyExistst);
+  }
+}
+
+export class EmailAlreadyInUseException extends BadRequestException {
+  constructor() {
+    super(UserExceptionMessages.emailAlreadyInUse);
   }
 }
 

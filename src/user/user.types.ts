@@ -12,6 +12,10 @@ export type CreateUserResponse = Prisma.UserGetPayload<{
   select: { email: true };
 }>;
 
+export type UpdateUser = Prisma.UserGetPayload<{
+  select: { activated: true; email: true; roles: true };
+}>;
+
 export type UserResponse = Prisma.UserGetPayload<{
   select: {
     id: true;

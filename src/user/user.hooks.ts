@@ -7,3 +7,10 @@ export class FromParamsSubjectHook implements SubjectBeforeFilterHook {
     return request.params;
   }
 }
+
+@Injectable()
+export class FromBodySubjectHook implements SubjectBeforeFilterHook {
+  async run(request: Request) {
+    return request.body;
+  }
+}

@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignInInput, GetUniqueUserInput } from './types';
 import { Class, Exact } from 'type-fest';
 import {
   UserAlreadyExistsException,
   UserDoesNotExistsException,
 } from './user.exceptions';
+import { GetUniqueUserInput, SignInInput } from './user.types';
 
 @Injectable()
 export class UserRepository {
@@ -26,7 +26,7 @@ export class UserRepository {
         },
       });
     } catch (error) {
-      this.parseError(error);
+      this.parsePrismaError(error);
     }
   }
 
@@ -41,10 +41,24 @@ export class UserRepository {
     try {
       user = await this.prisma.user.findUnique({ where });
     } catch (error) {
-      this.parseError(error);
+      this.parsePrismaError(error);
     }
     if (user) return user;
     throw new UserDoesNotExistsException();
+  }
+
+  /**
+   * Return arrays with Users or empty array
+   * @param {Prisma.UserWhereInput} where
+   **/
+  public async find(where: Prisma.UserWhereInput): Promise<User[]> {
+    let user: User[] = [];
+    try {
+      user = await this.prisma.user.findMany({ where });
+    } catch (error) {
+      this.parsePrismaError(error);
+    }
+    return user;
   }
 
   public async updateUnique<T extends Exact<GetUniqueUserInput, T>>(
@@ -54,11 +68,11 @@ export class UserRepository {
     try {
       return await this.prisma.user.update({ where, data });
     } catch (error) {
-      this.parseError(error);
+      this.parsePrismaError(error);
     }
   }
 
-  private parseError(error: any) {
+  private parsePrismaError(error: any) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       switch (error.code) {
         case 'P2002':

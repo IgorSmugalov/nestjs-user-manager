@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { RegisteredJwtClaims } from '../dto/jwt-claims-registered.dto';
-import { UserId } from 'src/user/types';
+import { UserId } from 'src/user/user.types';
 
 export interface Tokens {
   accessToken: string;

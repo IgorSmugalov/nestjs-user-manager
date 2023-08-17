@@ -1,6 +1,6 @@
 import { PickType } from '@nestjs/swagger';
-import { UserResponse } from '../types';
 import { UserDTO } from './user.dto';
+import { UserResponse } from '../user.types';
 
 export class UserResponseDTO
   extends PickType(UserDTO, [

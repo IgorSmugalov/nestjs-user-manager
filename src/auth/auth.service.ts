@@ -15,7 +15,7 @@ import { TokensDTO } from './dto/tokens.dto';
 import { ProfileService } from 'src/profile/profile.service';
 import { User } from '@prisma/client';
 import { Tokens } from './types';
-import { UserId } from 'src/user/types';
+import { UserId } from 'src/user/user.types';
 
 @Injectable()
 export class AuthService {

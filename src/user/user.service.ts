@@ -10,13 +10,14 @@ import { SignUpDTO } from './dto/sign-up.dto';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
+  UserIdDTO,
   UserRecoveryPasswordKeyDTO,
 } from './dto/params.dto';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
-import { GetPartialUniqueUserInput } from './types';
 import {
   ActivationKeyNotValidException,
+  EmailAlreadyInUseException,
   KeyExpiredException,
   PasswordRecoveryKeyNotValidException,
   UserAlreadyActivatedException,
@@ -29,6 +30,8 @@ import {
   ActivationMessageDTO,
   RecoveryPassMessageDTO,
 } from 'src/events/user-messages.dto';
+import { GetPartialUniqueUserInput, UpdateUser } from './user.types';
+import { UpdateUserDTO } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -69,6 +72,19 @@ export class UserService {
    **/
   public async getUnique(dto: GetPartialUniqueUserInput): Promise<User> {
     return await this.userRepository.getUnique(dto);
+  }
+
+  public async updateUser(updatedUser: UserIdDTO, updatedData: UpdateUserDTO) {
+    if (updatedData.email) {
+      const user = await this.userRepository.find({
+        email: updatedData.email,
+      });
+      if (user.length > 0) throw new EmailAlreadyInUseException();
+    }
+    return await this.userRepository.updateUnique(
+      { id: updatedUser.id },
+      updatedData,
+    );
   }
 
   public async updatePassword(

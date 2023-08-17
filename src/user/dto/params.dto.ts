@@ -1,11 +1,12 @@
 import { PickType } from '@nestjs/swagger';
+
+import { UserDTO } from './user.dto';
 import {
   UserActivationKey,
   UserEmail,
   UserId,
   UserRecoveryPasswordKey,
-} from '../types';
-import { UserDTO } from './user.dto';
+} from '../user.types';
 
 export class UserIdDTO extends PickType(UserDTO, ['id']) implements UserId {}
 

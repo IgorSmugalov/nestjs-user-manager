@@ -6,8 +6,8 @@ import {
   Get,
   HttpException,
   Param,
+  Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -19,37 +19,35 @@ import {
 import { User } from '@prisma/client';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
+import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
+import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { SERVER_CONFIG } from 'src/config/const';
 import { IServerConfig } from 'src/config/server.congfig';
+import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
 import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
-import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
-import { SignUpDTO } from './dto/sign-up.dto';
-
-import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
-import { UserResponseDTO } from './dto/user-response.dto';
-import {
-  ActivationKeyNotValidException,
-  PasswordRecoveryKeyNotValidException,
-  UserAlreadyActivatedException,
-  UserAlreadyExistsException,
-  UserDoesNotExistsException,
-} from './user.exceptions';
-import { UserService } from './user.service';
-import { UserActivationKey } from './types';
-import { UpdatePasswordDTO } from './dto/update-password.dto';
-import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
-import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
-import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
   UserIdDTO,
   UserRecoveryPasswordKeyDTO,
 } from './dto';
-import { AccessGuard, Actions, UseAbility } from 'nest-casl';
-import { FromParamsSubjectHook } from './user.hooks';
-import { AuthGuard as AuthGuard } from 'src/auth/guards/access-jwt.guard';
+import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
+import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
+import { SignUpDTO } from './dto/sign-up.dto';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { UpdateUserDTO } from './dto/update-user.dto';
+import { UserResponseDTO } from './dto/user-response.dto';
+import {
+  ActivationKeyNotValidException,
+  EmailAlreadyInUseException,
+  PasswordRecoveryKeyNotValidException,
+  UserAlreadyActivatedException,
+  UserAlreadyExistsException,
+  UserDoesNotExistsException,
+} from './user.exceptions';
+import { UserService } from './user.service';
+import { UserActivationKey } from './user.types';
 
 @Controller('user')
 export class UserController {
@@ -74,14 +72,24 @@ export class UserController {
 
   @ApiTags('User')
   @Get(':id')
-  @UseGuards(AuthGuard, AccessGuard)
-  @UseAbility(Actions.read, UserIdDTO, FromParamsSubjectHook)
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiOkResponse({ type: UserResponseDTO })
   @ApiException(() => UserDoesNotExistsException)
   async getById(@Param() userId: UserIdDTO): Promise<User> {
     return await this.userService.getUnique(userId);
+  }
+
+  @Patch(':id')
+  @UseRequestValidation()
+  @UseResponseSerializer(UserResponseDTO)
+  @ApiOkResponse({ type: UserResponseDTO })
+  @ApiException(() => [UserDoesNotExistsException, EmailAlreadyInUseException])
+  async updateUser(
+    @Param() idDto: UserIdDTO,
+    @Body() updateDto: UpdateUserDTO,
+  ) {
+    return this.userService.updateUser(idDto, updateDto);
   }
 
   @ApiTags('User/activation')

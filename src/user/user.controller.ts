@@ -7,7 +7,6 @@ import {
   HttpException,
   Param,
   Post,
-  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -17,7 +16,7 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { SERVER_CONFIG } from 'src/config/const';
@@ -42,15 +41,15 @@ import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
 import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
-import { OWNER_KEY, ROLES_KEY } from 'src/lib/permissions/const';
-import { AuthorizedAccess } from 'src/auth/decorators/authorized-access.decorator';
 import {
   UserActivationKeyDTO,
   UserEmailDTO,
   UserIdDTO,
   UserRecoveryPasswordKeyDTO,
 } from './dto';
-import { GetOwnerID, AuthorizeGuard } from 'src/lib/permissions';
+import { AccessGuard, Actions, UseAbility } from 'nest-casl';
+import { FromParamsSubjectHook } from './user.hooks';
+import { AuthGuard as AuthGuard } from 'src/auth/guards/access-jwt.guard';
 
 @Controller('user')
 export class UserController {
@@ -75,10 +74,8 @@ export class UserController {
 
   @ApiTags('User')
   @Get(':id')
-  @SetMetadata<string, Role[]>(ROLES_KEY, [Role.user])
-  @SetMetadata<string, GetOwnerID>(OWNER_KEY, (request) => request.params.id)
-  @UseGuards(AuthorizeGuard)
-  @AuthorizedAccess()
+  @UseGuards(AuthGuard, AccessGuard)
+  @UseAbility(Actions.read, UserIdDTO, FromParamsSubjectHook)
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiOkResponse({ type: UserResponseDTO })

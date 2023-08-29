@@ -1,13 +1,31 @@
-import { Module } from '@nestjs/common';
-import { Role } from '@prisma/client';
-import { CaslModule } from 'nest-casl';
+import { DynamicModule, Module } from '@nestjs/common';
+import { PERMISSIONS_FEATURE_OPTIONS } from './permission.const';
+import { PermissionService } from './permission.service';
+import { AbilityFactory, OptionsForFeature } from './permissions.factory';
 
 @Module({
-  imports: [
-    CaslModule.forRoot<Role>({
-      superuserRole: Role.superadmin,
-      getUserFromRequest: (req) => req.user,
-    }),
+  providers: [
+    {
+      provide: PERMISSIONS_FEATURE_OPTIONS,
+      useValue: {},
+    },
+    PermissionService,
+    AbilityFactory,
   ],
+  exports: [PermissionService, AbilityFactory],
 })
-export class PermissionModule {}
+export class CaslModule {
+  static forFeature(options: OptionsForFeature): DynamicModule {
+    return {
+      module: CaslModule,
+      providers: [
+        PermissionService,
+        AbilityFactory,
+        {
+          provide: PERMISSIONS_FEATURE_OPTIONS,
+          useValue: options,
+        },
+      ],
+    };
+  }
+}

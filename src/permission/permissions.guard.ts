@@ -11,9 +11,9 @@ import { plainToInstance } from 'class-transformer';
 import { Subject } from '@casl/ability';
 import { AnyClass } from '@casl/ability/dist/types/types';
 import { Reflector } from '@nestjs/core';
-import { AppActions } from './permissions.factory';
 import { PERMISSIONS_GUARD_CONFIG } from './permission.const';
 import { AccessForbiddenException } from './permissio.exceptions';
+import { AppActions } from './permission.interface';
 
 export interface PermissionGuardOptions {
   action: AppActions;

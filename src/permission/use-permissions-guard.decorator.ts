@@ -2,7 +2,7 @@ import { UseGuards, applyDecorators } from '@nestjs/common';
 import { AnyClass, Subject } from '@casl/ability/dist/types/types';
 import { Request } from 'express';
 import { ConfigurateRBAC, PermissionsGuard } from './permissions.guard';
-import { AppActions } from './permissions.factory';
+import { AppActions } from './permission.interface';
 
 export function UsePermissionsGuard<T extends AnyClass<Subject>>(
   action: AppActions,

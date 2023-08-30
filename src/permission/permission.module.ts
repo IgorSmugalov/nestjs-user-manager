@@ -1,7 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { PERMISSIONS_FEATURE_OPTIONS } from './permission.const';
 import { PermissionService } from './permission.service';
-import { AbilityFactory, OptionsForFeature } from './permissions.factory';
+import { AbilityFactory } from './permissions.factory';
+import { OptionsForFeature } from './permission.interface';
 
 @Module({
   providers: [

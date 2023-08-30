@@ -1,40 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
 import {
   AbilityBuilder,
   ExtractSubjectType,
   Subject,
-  PureAbility,
-  MatchConditions,
+  createMongoAbility,
 } from '@casl/ability';
 import { AnyClass } from '@casl/ability/dist/types/types';
-import { Role } from '@prisma/client';
+import * as extra from '@casl/ability/extra';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuthenticatedUserDTO } from 'src/auth';
 import { PERMISSIONS_FEATURE_OPTIONS } from './permission.const';
-
-export enum AppActions {
-  READ = 'read',
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  MANAGE = 'manage',
-}
-
-export type Roles = Role | 'everyone';
-
-const conditionMatcher = (matchConditions: MatchConditions) => matchConditions;
-
-export type DefinePermissionsForUser<T extends Subject = Subject> = (
-  user: AuthenticatedUserDTO,
-  builder: AbilityBuilder<PureAbility<[AppActions, T], MatchConditions<T>>>,
-) => void;
-
-export type Permissions<T extends Subject = Subject> = Partial<
-  Record<Roles, DefinePermissionsForUser<T>>
->;
-
-export interface OptionsForFeature {
-  permissions: Permissions;
-}
+import {
+  AppAbility,
+  AppActions,
+  OptionsForFeature,
+} from './permission.interface';
 
 @Injectable()
 export class AbilityFactory {
@@ -44,9 +23,7 @@ export class AbilityFactory {
   ) {}
 
   defineAbilityFor(user: AuthenticatedUserDTO) {
-    const builder = new AbilityBuilder<
-      PureAbility<[AppActions, Subject], MatchConditions>
-    >(PureAbility);
+    const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
 
     const { permissions } = this.options;
 
@@ -61,10 +38,20 @@ export class AbilityFactory {
         }
       });
     }
+
     return builder.build({
-      conditionsMatcher: conditionMatcher,
       detectSubjectType: (object) =>
         object.constructor as ExtractSubjectType<AnyClass<Subject>>,
+    });
+  }
+
+  definePermittedFieldForAbility(
+    ability: AppAbility,
+    action: AppActions,
+    subject: Subject,
+  ) {
+    return extra.permittedFieldsOf(ability, action, subject, {
+      fieldsFrom: (rule) => rule.fields || [],
     });
   }
 }

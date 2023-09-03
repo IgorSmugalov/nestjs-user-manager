@@ -12,17 +12,17 @@ import { PERMISSIONS_FEATURE_OPTIONS } from './permission.const';
 import {
   AppAbility,
   AppActions,
-  OptionsForFeature,
+  ModuleOptionsForFeature,
 } from './permission.interface';
 
 @Injectable()
 export class AbilityFactory {
   constructor(
     @Inject(PERMISSIONS_FEATURE_OPTIONS)
-    private options: OptionsForFeature,
+    private options: ModuleOptionsForFeature,
   ) {}
 
-  defineAbilityFor(user: AuthenticatedUserDTO) {
+  defineAbilityForUser(user: AuthenticatedUserDTO) {
     const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
 
     const { permissions } = this.options;

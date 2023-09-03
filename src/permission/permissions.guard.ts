@@ -1,46 +1,23 @@
-import {
-  CanActivate,
-  CustomDecorator,
-  ExecutionContext,
-  Injectable,
-  SetMetadata,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { PermissionService } from './permission.service';
 import { plainToInstance } from 'class-transformer';
-import { Subject } from '@casl/ability';
-import { AnyClass } from '@casl/ability/dist/types/types';
-import { Reflector } from '@nestjs/core';
+import { ModuleRef, Reflector } from '@nestjs/core';
 import { PERMISSIONS_GUARD_CONFIG } from './permission.const';
 import { AccessForbiddenException } from './permissio.exceptions';
-import { AppActions } from './permission.interface';
-
-export interface PermissionGuardOptions {
-  action: AppActions;
-  subjectClass: AnyClass<Subject>;
-  getSubject: (req: Request) => Record<string, any>;
-}
-
-export function ConfigurateRBAC(
-  action: AppActions,
-  subjectClass: AnyClass<Subject>,
-  getSubject: (req: Request) => Record<string, any>,
-): CustomDecorator {
-  return SetMetadata<string, PermissionGuardOptions>(PERMISSIONS_GUARD_CONFIG, {
-    action,
-    subjectClass,
-    getSubject,
-  });
-}
+import { PermissionGuardOptions } from './permission.interface';
+import { AnyClass, AnyObject } from '@casl/ability/dist/types/types';
+import { subjectHookFactory } from './subject-hook.factory';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
     private accessService: PermissionService,
     private reflector: Reflector,
+    private moduleRef: ModuleRef,
   ) {}
-  canActivate(context: ExecutionContext): boolean {
-    const { action, subjectClass, getSubject } =
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const { action, subjectClass, subjectHook } =
       this.reflector.get<PermissionGuardOptions>(
         PERMISSIONS_GUARD_CONFIG,
         context.getHandler(),
@@ -48,20 +25,21 @@ export class PermissionsGuard implements CanActivate {
     const request: Request = context.switchToHttp().getRequest();
     const { user } = request;
 
-    const subjectInstance = plainToInstance(subjectClass, getSubject(request), {
+    if (!user || user.roles.length === 0) throw new AccessForbiddenException();
+    if (request.user.roles.includes('superadmin')) return true;
+
+    const factory = await subjectHookFactory(this.moduleRef, subjectHook);
+    const subjectInstance = this.buildSubject(
+      subjectClass,
+      await factory.extractFromRequest(request),
+    );
+
+    return this.accessService.canAccess(user, action, subjectInstance);
+  }
+
+  private buildSubject(subjectClass: AnyClass, data: AnyObject): AnyClass {
+    return plainToInstance(subjectClass, data, {
       ignoreDecorators: true,
     });
-
-    if (!user || user.roles.length < 1) throw new AccessForbiddenException();
-
-    // if (request.user.roles.includes('superadmin')) return true;
-
-    const userCan = this.accessService.isCanAccess(
-      user,
-      action,
-      subjectInstance,
-    );
-    if (userCan) return true;
-    throw new AccessForbiddenException();
   }
 }

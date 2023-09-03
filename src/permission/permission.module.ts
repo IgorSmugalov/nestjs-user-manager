@@ -2,7 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { PERMISSIONS_FEATURE_OPTIONS } from './permission.const';
 import { PermissionService } from './permission.service';
 import { AbilityFactory } from './permissions.factory';
-import { OptionsForFeature } from './permission.interface';
+import { ModuleOptionsForFeature } from './permission.interface';
 
 @Module({
   providers: [
@@ -16,7 +16,7 @@ import { OptionsForFeature } from './permission.interface';
   exports: [PermissionService, AbilityFactory],
 })
 export class CaslModule {
-  static forFeature(options: OptionsForFeature): DynamicModule {
+  static forFeature(options: ModuleOptionsForFeature): DynamicModule {
     return {
       module: CaslModule,
       providers: [

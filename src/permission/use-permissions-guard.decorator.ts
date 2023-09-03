@@ -1,16 +1,24 @@
-import { UseGuards, applyDecorators } from '@nestjs/common';
-import { AnyClass, Subject } from '@casl/ability/dist/types/types';
-import { Request } from 'express';
-import { ConfigurateRBAC, PermissionsGuard } from './permissions.guard';
-import { AppActions } from './permission.interface';
+import { SetMetadata, UseGuards, applyDecorators } from '@nestjs/common';
+import { PermissionsGuard } from './permissions.guard';
+import {
+  AppActions,
+  PermissionGuardOptions,
+  SubjectHook,
+} from './permission.interface';
+import { AnyClass } from '@casl/ability/dist/types/types';
+import { PERMISSIONS_GUARD_CONFIG } from './permission.const';
 
-export function UsePermissionsGuard<T extends AnyClass<Subject>>(
+export function UsePermissionsGuard(
   action: AppActions,
-  subjectClass: T,
-  getSubject: (req: Request) => Record<any, any>,
+  subjectClass: AnyClass,
+  subjectHook: AnyClass<SubjectHook>,
 ) {
   return applyDecorators(
-    ConfigurateRBAC(action, subjectClass, getSubject),
+    SetMetadata<string, PermissionGuardOptions>(PERMISSIONS_GUARD_CONFIG, {
+      action,
+      subjectClass,
+      subjectHook,
+    }),
     UseGuards(PermissionsGuard),
   );
 }

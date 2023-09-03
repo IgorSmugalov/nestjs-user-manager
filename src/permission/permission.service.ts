@@ -1,29 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { Subject, ForbiddenError } from '@casl/ability';
+import { ForbiddenError } from '@casl/ability';
 import { AbilityFactory } from './permissions.factory';
 import { AuthenticatedUserDTO } from 'src/auth';
 import { AccessForbiddenException } from './permissio.exceptions';
 import { AppActions } from './permission.interface';
+import { AnyClass } from '@casl/ability/dist/types/types';
 
 @Injectable()
 export class PermissionService {
   constructor(private abilityFactory: AbilityFactory) {}
 
-  public isCanAccess(
+  public canAccess(
     user: AuthenticatedUserDTO,
     action: AppActions,
-    subject: Subject,
+    subject: AnyClass,
   ): boolean {
-    if (!user || !action || !subject) return false;
-    const abilities = this.abilityFactory.defineAbilityFor(user);
-
+    if (!user || !action || !subject) throw new AccessForbiddenException();
+    const abilities = this.abilityFactory.defineAbilityForUser(user);
     const permittedFieldsOfAbility =
       this.abilityFactory.definePermittedFieldForAbility(
         abilities,
         action,
         subject,
       );
-    console.log(permittedFieldsOfAbility);
     if (permittedFieldsOfAbility.length > 0) {
       const subjectFields = Object.keys(subject);
       subjectFields.forEach((field) => {
@@ -33,8 +32,8 @@ export class PermissionService {
           throw new AccessForbiddenException();
         }
       });
-      console.log(subjectFields);
     }
-    return abilities.can(action, subject);
+    if (!abilities.can(action, subject)) throw new AccessForbiddenException();
+    return true;
   }
 }

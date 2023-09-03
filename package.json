@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@casl/ability": "^6.5.0",
     "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.5",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "^9.0.0",
@@ -39,7 +40,6 @@
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
     "jose": "^4.14.4",
-    "nest-casl": "^1.8.11",
     "nodemailer": "^6.9.3",
     "nodemailer-express-handlebars": "^6.1.0",
     "reflect-metadata": "^0.1.13",

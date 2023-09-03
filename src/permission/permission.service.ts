@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ForbiddenError } from '@casl/ability';
 import { AbilityFactory } from './permissions.factory';
 import { AuthenticatedUserDTO } from 'src/auth';
-import { AccessForbiddenException } from './permissio.exceptions';
 import { AppActions } from './permission.interface';
 import { AnyClass } from '@casl/ability/dist/types/types';
 
@@ -15,7 +14,7 @@ export class PermissionService {
     action: AppActions,
     subject: AnyClass,
   ): boolean {
-    if (!user || !action || !subject) throw new AccessForbiddenException();
+    if (!user || !action || !subject) return false;
     const abilities = this.abilityFactory.defineAbilityForUser(user);
     const permittedFieldsOfAbility =
       this.abilityFactory.definePermittedFieldForAbility(
@@ -28,12 +27,11 @@ export class PermissionService {
       subjectFields.forEach((field) => {
         try {
           ForbiddenError.from(abilities).throwUnlessCan(action, subject, field);
-        } catch (error) {
-          throw new AccessForbiddenException();
+        } catch {
+          return false;
         }
       });
     }
-    if (!abilities.can(action, subject)) throw new AccessForbiddenException();
-    return true;
+    return abilities.can(action, subject);
   }
 }

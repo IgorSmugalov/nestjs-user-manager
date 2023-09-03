@@ -34,7 +34,9 @@ export class PermissionsGuard implements CanActivate {
       await factory.extractFromRequest(request),
     );
 
-    return this.accessService.canAccess(user, action, subjectInstance);
+    const isCan = this.accessService.canAccess(user, action, subjectInstance);
+    if (isCan) return true;
+    throw new AccessForbiddenException();
   }
 
   private buildSubject(subjectClass: AnyClass, data: AnyObject): AnyClass {

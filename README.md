@@ -67,6 +67,12 @@ Used CASL, dynamic module and factory approach for creating and checking permiss
 - JSDoc
 - Swagger
 
+## Todo
+
+- Complete documentation and swagger
+- Add user blocking and deletion
+- Update imports for modules
+
 # Usage
 
 - Clone this repository

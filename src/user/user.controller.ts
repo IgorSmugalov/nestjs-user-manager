@@ -36,7 +36,6 @@ import { ActivationUserResponseDTO } from './dto/activation-user-response.dto';
 import { RecoveryPasswordDTO } from './dto/recovery-password.dto';
 import { SignUpDTO } from './dto/sign-up.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
-import { UpdateUserDTO } from './dto/update-user.dto';
 import { UserResponseDTO } from './dto/user-response.dto';
 import {
   ActivationKeyNotValidException,
@@ -48,6 +47,7 @@ import {
 } from './user.exceptions';
 import { UserService } from './user.service';
 import { UserActivationKey } from './user.types';
+import { UpdateUserDTO } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -80,6 +80,7 @@ export class UserController {
     return await this.userService.getUnique(userId);
   }
 
+  @ApiTags('User')
   @Patch(':id')
   @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)

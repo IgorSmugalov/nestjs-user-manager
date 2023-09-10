@@ -12,7 +12,6 @@ import { MaxFileSizeConstraint } from './lib/validation/max-file-size.validator'
 import { IsImageBufferConstraint } from './lib/validation/isImage.validator';
 import { MailerModule } from './mailer/mailer.module';
 import { EventsModule } from './events/events.module';
-import { CaslModule } from './permission/permission.module';
 
 @Module({
   imports: [
@@ -24,7 +23,6 @@ import { CaslModule } from './permission/permission.module';
     ProfileModule,
     MailerModule,
     EventsModule,
-    CaslModule,
   ],
   controllers: [],
   providers: [

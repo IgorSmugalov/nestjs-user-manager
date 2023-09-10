@@ -6,17 +6,9 @@ import { CryptoModule } from 'src/crypto/crypto.module';
 import { HttpModule } from '@nestjs/axios';
 import { UserRepository } from './user.repository';
 import { ProfileModule } from 'src/profile/profile.module';
-import { CaslModule } from 'nest-casl';
-import { permissions } from './user.permissions';
 
 @Module({
-  imports: [
-    PrismaModule,
-    CryptoModule,
-    HttpModule,
-    ProfileModule,
-    CaslModule.forFeature({ permissions: permissions }),
-  ],
+  imports: [PrismaModule, CryptoModule, HttpModule, ProfileModule],
   providers: [UserService, UserRepository],
   exports: [UserService],
   controllers: [UserController],

@@ -8,7 +8,7 @@ import { Observable, map } from 'rxjs';
 import { ProfileService } from '../profile.service';
 
 @Injectable()
-export class DefineAvatarURNInterceptor implements NestInterceptor {
+export class AvatarPathInterceptor implements NestInterceptor {
   constructor(private readonly profileService: ProfileService) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(

@@ -6,6 +6,7 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   IsStrongPassword,
   IsUUID,
@@ -35,6 +36,7 @@ export class UserDTO implements User {
 
   @Expose()
   @IsEnum(Role, { each: true })
+  @ApiProperty()
   roles: Role[];
 
   @Expose()

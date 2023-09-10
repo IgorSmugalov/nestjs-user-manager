@@ -5,18 +5,17 @@ import {
   SerializeOptions,
   UseInterceptors,
 } from '@nestjs/common';
-import { ClassConstructor } from 'class-transformer';
 import { Class } from 'type-fest';
 
 export const UseResponseSerializer = (
-  classType: ClassConstructor<any>,
+  classConstructor: Class<any>,
   inrerceptors: Class<NestInterceptor>[] = [],
-): MethodDecorator & ClassDecorator =>
+): MethodDecorator =>
   applyDecorators(
     SerializeOptions({
       strategy: 'excludeAll',
       excludeExtraneousValues: true,
-      type: classType,
+      type: classConstructor,
     }),
     UseInterceptors(ClassSerializerInterceptor, ...inrerceptors),
   );

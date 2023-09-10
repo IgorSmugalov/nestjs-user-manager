@@ -8,7 +8,7 @@ import { AuthenticatedUserDTO } from 'src/auth';
  * root role excluded because it's can do any action, see permissions guard
  * everyone used for adding permissions regardless of role
  */
-export type Roles = Exclude<Role, 'root'> | 'everyone';
+export type Roles = Exclude<Role, 'superadmin'> | 'everyone';
 
 export type AppAbility = MongoAbility;
 

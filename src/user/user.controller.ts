@@ -28,6 +28,7 @@ import { UseResponseSerializer } from 'src/lib/serialization/use-response-serial
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
 import {
   UserActivationKeyDTO,
+  UserDTO,
   UserEmailDTO,
   UserIdDTO,
   UserRecoveryPasswordKeyDTO,
@@ -48,8 +49,13 @@ import {
 import { UserService } from './user.service';
 import { UserActivationKey } from './user.types';
 import { UpdateUserDTO } from './dto/update-user.dto';
+import { UsePermissionsControl } from 'src/permissions';
+import { UserActions } from './user.permissions';
+import { UserDTOHook } from './hooks/user-dto.hook';
+import { UserIdHook } from './hooks/user-id.hook';
 
 @Controller('user')
+@UseRequestValidation()
 export class UserController {
   constructor(
     private userService: UserService,
@@ -61,7 +67,6 @@ export class UserController {
 
   @ApiTags('User')
   @Post('sign-up')
-  @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiBody({ type: SignUpDTO })
   @ApiCreatedResponse({ type: UserResponseDTO })
@@ -72,7 +77,7 @@ export class UserController {
 
   @ApiTags('User')
   @Get(':id')
-  @UseRequestValidation()
+  @UsePermissionsControl(UserActions.read, UserIdDTO, UserIdHook)
   @UseResponseSerializer(UserResponseDTO)
   @ApiOkResponse({ type: UserResponseDTO })
   @ApiException(() => UserDoesNotExistsException)
@@ -82,7 +87,7 @@ export class UserController {
 
   @ApiTags('User')
   @Patch(':id')
-  @UseRequestValidation()
+  @UsePermissionsControl(UserActions.update, UserDTO, UserDTOHook)
   @UseResponseSerializer(UserResponseDTO)
   @ApiOkResponse({ type: UserResponseDTO })
   @ApiException(() => [UserDoesNotExistsException, EmailAlreadyInUseException])
@@ -95,7 +100,6 @@ export class UserController {
 
   @ApiTags('User/activation')
   @Post('activate/:activationKey')
-  @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)
   @ApiCreatedResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => ActivationKeyNotValidException)
@@ -105,7 +109,6 @@ export class UserController {
 
   @ApiTags('User/activation')
   @Post('renew-activation-key/:email')
-  @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)
   @ApiCreatedResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => [
@@ -118,7 +121,6 @@ export class UserController {
 
   @ApiTags('User/password')
   @Post('update-password')
-  @UseRequestValidation()
   @UseResponseSerializer(UserResponseDTO)
   @ApiBody({ type: UpdatePasswordDTO })
   @ApiCreatedResponse({ type: UserResponseDTO })
@@ -132,7 +134,6 @@ export class UserController {
 
   @ApiTags('User/password')
   @Post('pass-recovery-init/:email')
-  @UseRequestValidation()
   @UseResponseSerializer(UserEmailDTO)
   @ApiCreatedResponse({ type: UserEmailDTO })
   @ApiException(() => UserDoesNotExistsException)
@@ -142,7 +143,6 @@ export class UserController {
 
   @ApiTags('User/password')
   @Get('pass-recovery/:recoveryPasswordKey')
-  @UseRequestValidation()
   @UseResponseSerializer(UserRecoveryPasswordKeyDTO)
   @ApiOkResponse({ type: UserRecoveryPasswordKeyDTO })
   @ApiException(() => PasswordRecoveryKeyNotValidException)
@@ -154,7 +154,6 @@ export class UserController {
 
   @ApiTags('User/password')
   @Post('pass-recovery')
-  @UseRequestValidation()
   @UseResponseSerializer(UserEmailDTO)
   @ApiBody({ type: RecoveryPasswordDTO })
   @ApiCreatedResponse({ type: UserEmailDTO })
@@ -168,7 +167,6 @@ export class UserController {
   // Temporary: for activation link from email -> redirect from GET to POST api, in future this logic can be moved to frontend
   @ApiTags('User/activation')
   @Get('email-activation-proxy/:activationKey')
-  @UseRequestValidation()
   @UseResponseSerializer(ActivationUserResponseDTO)
   @ApiOkResponse({ type: ActivationUserResponseDTO })
   @ApiException(() => ActivationKeyNotValidException)

@@ -28,6 +28,7 @@ export const UseRequestValidation = (): MethodDecorator & ClassDecorator =>
         whitelist: true,
         validateCustomDecorators: true,
         stopAtFirstError: true,
+        transformOptions: { exposeUnsetFields: false },
       }),
     ),
     ApiException(() => ValidationException, {

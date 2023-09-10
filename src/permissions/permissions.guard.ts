@@ -11,7 +11,10 @@ import { ModuleRef, Reflector } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { Request } from 'express';
 import { PERMISSIONS_GUARD_CONFIG } from './permissions.const';
-import { AccessForbiddenException } from './permissions.exceptions';
+import {
+  AccessForbiddenException,
+  UserNotAuthenticatedException,
+} from './permissions.exceptions';
 import { PermissionGuardOptions, SubjectHook } from './permissions.interface';
 import { PermissionService } from './permissions.service';
 import { subjectHookFactory } from './factories/subject-hook.factory';
@@ -32,8 +35,10 @@ export class PermissionsGuard implements CanActivate {
     const request: Request = context.switchToHttp().getRequest();
     const { user } = request;
 
-    // request.user === null or user.roles empty - throw error
-    if (!user || user.roles.length === 0) throw new AccessForbiddenException();
+    if (!user) throw new UserNotAuthenticatedException();
+
+    // if user.roles arr is empty - throw error
+    if (user.roles.length === 0) throw new AccessForbiddenException();
 
     // superadmin has unrestricted access
     if (user.roles.includes('superadmin')) return true;
@@ -73,7 +78,7 @@ export class PermissionsGuard implements CanActivate {
   }
 }
 
-export function UsePermissionsGuard(
+export function UsePermissionsControl(
   action: string,
   subjectClass: AnyClass,
   subjectHook?: AnyClass<SubjectHook>,

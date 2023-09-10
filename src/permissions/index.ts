@@ -1,2 +1,7 @@
 export { PermissionModule } from './permissions.module';
-export { Permissions } from './permissions.interface';
+export {
+  Permissions,
+  SubjectHook,
+  HookSubjectsSet,
+} from './permissions.interface';
+export { UsePermissionsControl } from './permissions.guard';

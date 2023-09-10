@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { CredentialsDTO } from './dto/credentials.dto';
 import { Response } from 'express';
 import { UseRequestValidation } from 'src/lib/validation/use-request-validation.decorator';
-import { RefreshedAccess } from './decorators/refreshed-access.decorator';
+import { UseRefreshCookieGuard } from './decorators/use-refresh-cookie-guard.decorator';
 import { RefreshedUser } from './decorators/refreshed-user.decorator';
 import { RefreshJwtClaimsDTO } from './dto/jwt-claims-refresh.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
@@ -14,19 +14,19 @@ import {
   UserNotActivatedException,
 } from './auth.exceptions';
 import { UseResponseSerializer } from 'src/lib/serialization/use-response-serializer.decorator';
-import { AuthSignInResponseDTO } from './dto/auth-sign-in-response.dto';
-import { AuthSignOutResponseDTO } from './dto/auth-sign-out-response.dto';
+import { SignInResponseDTO } from './dto/sign-in-response.dto';
+import { SignOutResponseDTO } from './dto/sign-out-response.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
-  @Post('login')
+  @Post('sign-in')
   @UseRequestValidation()
-  @UseResponseSerializer(AuthSignInResponseDTO)
+  @UseResponseSerializer(SignInResponseDTO)
   @ApiBody({ type: CredentialsDTO })
-  @ApiCreatedResponse({ type: AuthSignInResponseDTO })
+  @ApiCreatedResponse({ type: SignInResponseDTO })
   @ApiException(() => [
     IncorrectCredentialsException,
     IncorrectRefreshTokenException,
@@ -42,10 +42,10 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @RefreshedAccess()
+  @UseRefreshCookieGuard()
   @UseRequestValidation()
-  @UseResponseSerializer(AuthSignInResponseDTO)
-  @ApiCreatedResponse({ type: AuthSignInResponseDTO })
+  @UseResponseSerializer(SignInResponseDTO)
+  @ApiCreatedResponse({ type: SignInResponseDTO })
   @ApiException(() => [
     IncorrectRefreshTokenException,
     UserNotActivatedException,
@@ -59,11 +59,11 @@ export class AuthController {
     return authResult;
   }
 
-  @Post('logout')
-  @RefreshedAccess()
+  @Post('sign-out')
+  @UseRefreshCookieGuard()
   @UseRequestValidation()
-  @UseResponseSerializer(AuthSignOutResponseDTO)
-  @ApiCreatedResponse({ type: AuthSignOutResponseDTO })
+  @UseResponseSerializer(SignOutResponseDTO)
+  @ApiCreatedResponse({ type: SignOutResponseDTO })
   async logout(
     @RefreshedUser() user: RefreshJwtClaimsDTO,
     @Res({ passthrough: true }) res: Response,

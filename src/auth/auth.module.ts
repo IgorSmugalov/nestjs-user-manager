@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -12,7 +12,12 @@ import { RefreshJwtAuthMiddleware } from './middlewares/refresh-jwt-auth.middlew
 @Module({
   controllers: [AuthController],
   providers: [AuthService, AccessJwtService, RefreshJwtService],
-  imports: [PrismaModule, CryptoModule, UserModule, ProfileModule],
+  imports: [
+    PrismaModule,
+    CryptoModule,
+    forwardRef(() => UserModule),
+    ProfileModule,
+  ],
   exports: [AccessJwtService, RefreshJwtService, AuthService],
 })
 export class AuthModule {

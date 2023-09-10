@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/swagger';
-import { AuthSignInResponse } from '../types';
+import { SignInResponse } from '../auth.interface';
 import { TokensDTO } from './tokens.dto';
 
-export class AuthSignInResponseDTO
+export class SignInResponseDTO
   extends PickType(TokensDTO, ['accessToken'])
-  implements AuthSignInResponse {}
+  implements SignInResponse {}

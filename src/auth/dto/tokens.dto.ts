@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { Tokens } from '../types';
+import { Tokens } from '../auth.interface';
 
 export class TokensDTO implements Tokens {
   constructor(data: Tokens) {

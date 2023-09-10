@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
-import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { USER_CONFIG } from 'src/config/const';
 import { IUserConfig } from 'src/config/user.config';
 import { HashService } from 'src/crypto/hash.service';
@@ -30,8 +29,9 @@ import {
   ActivationMessageDTO,
   RecoveryPassMessageDTO,
 } from 'src/events/user-messages.dto';
-import { GetPartialUniqueUserInput, UpdateUser } from './user.types';
+import { GetPartialUniqueUserInput } from './user.types';
 import { UpdateUserDTO } from './dto/update-user.dto';
+import { AuthenticatedUserDTO } from 'src/auth';
 
 @Injectable()
 export class UserService {

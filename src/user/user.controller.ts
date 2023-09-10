@@ -19,8 +19,6 @@ import {
 import { User } from '@prisma/client';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
-import { User as AuthenticatedUser } from 'src/auth/decorators/user.decorator';
-import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
 import { SERVER_CONFIG } from 'src/config/const';
 import { IServerConfig } from 'src/config/server.congfig';
 import { IncorrectPasswordException } from 'src/crypto/exceptions/password.exceptions';
@@ -53,6 +51,7 @@ import { UsePermissionsControl } from 'src/permissions';
 import { UserActions } from './user.permissions';
 import { UserDTOHook } from './hooks/user-dto.hook';
 import { UserIdHook } from './hooks/user-id.hook';
+import { AuthenticatedUser, AuthenticatedUserDTO } from 'src/auth';
 
 @Controller('user')
 @UseRequestValidation()

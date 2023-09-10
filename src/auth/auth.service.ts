@@ -14,8 +14,9 @@ import { UserService } from 'src/user/user.service';
 import { TokensDTO } from './dto/tokens.dto';
 import { ProfileService } from 'src/profile/profile.service';
 import { User } from '@prisma/client';
-import { Tokens } from './types';
+import { Tokens } from './auth.interface';
 import { UserId } from 'src/user/user.types';
+import { REFRESH_COOKIE_KEY, REFRESH_COOKIE_PATH } from './auth.const';
 
 @Injectable()
 export class AuthService {
@@ -94,9 +95,9 @@ export class AuthService {
   }
 
   public setAuthCookie(response: Response, refreshToken: string) {
-    response.cookie('refresh', refreshToken, {
+    response.cookie(REFRESH_COOKIE_KEY, refreshToken, {
       httpOnly: true,
-      path: '/auth/',
+      path: REFRESH_COOKIE_PATH,
     });
   }
 
@@ -105,9 +106,9 @@ export class AuthService {
   }
 
   public clearAuthCookie(response: Response) {
-    return response.clearCookie('refresh', {
+    return response.clearCookie(REFRESH_COOKIE_KEY, {
       httpOnly: true,
-      path: '/auth/',
+      path: REFRESH_COOKIE_PATH,
     });
   }
 

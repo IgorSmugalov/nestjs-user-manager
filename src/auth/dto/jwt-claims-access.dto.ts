@@ -1,6 +1,6 @@
 import { IntersectionType, PickType } from '@nestjs/swagger';
 import { RegisteredJwtClaimsDTO } from './jwt-claims-registered.dto';
-import { AccessJwtClaims } from '../types';
+import { AccessJwtClaims } from '../auth.interface';
 import { Expose, plainToInstance } from 'class-transformer';
 import { JWTPayload } from 'jose';
 import { ProfileDTO } from 'src/profile/dto/profile.dto';

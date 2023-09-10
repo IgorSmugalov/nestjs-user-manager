@@ -1,11 +1,13 @@
 import { UseGuards, applyDecorators } from '@nestjs/common';
-import { RefreshJwtGuard } from '../guards/refresh-jwt.guard';
+import { RefreshCookieGuard } from '../guards/refresh-cookie.guard';
 import { UserUnauthorizedException } from '../auth.exceptions';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import { ApiCookieAuth } from '@nestjs/swagger';
 
-export function RefreshedAccess() {
+export function UseRefreshCookieGuard() {
   return applyDecorators(
-    UseGuards(RefreshJwtGuard),
+    UseGuards(RefreshCookieGuard),
+    ApiCookieAuth('refresh'),
     ApiException(() => UserUnauthorizedException),
   );
 }

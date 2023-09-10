@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { RegisteredJwtClaims } from '../dto/jwt-claims-registered.dto';
+import { RegisteredJwtClaims } from './dto/jwt-claims-registered.dto';
 import { UserId } from 'src/user/user.types';
 
 export interface Tokens {
@@ -7,8 +7,8 @@ export interface Tokens {
   refreshToken: string;
 }
 
-export type AuthSignInResponse = Pick<Tokens, 'accessToken'>;
-export type AuthSignOutResponse = UserId;
+export type SignInResponse = Pick<Tokens, 'accessToken'>;
+export type SignOutResponse = UserId;
 
 // Access Jwt
 

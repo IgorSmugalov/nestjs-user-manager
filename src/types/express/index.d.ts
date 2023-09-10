@@ -1,5 +1,4 @@
-import { AuthenticatedUserDTO } from 'src/auth/dto/authenticated-user.dto';
-import { RefreshJwtClaimsDTO } from 'src/auth/dto/jwt-claims-refresh.dto';
+import { AuthenticatedUserDTO, RefreshJwtClaimsDTO } from 'src/auth';
 
 export {};
 

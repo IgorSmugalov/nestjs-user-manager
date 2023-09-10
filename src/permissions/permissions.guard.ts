@@ -18,6 +18,7 @@ import {
 import { PermissionGuardOptions, SubjectHook } from './permissions.interface';
 import { PermissionService } from './permissions.service';
 import { subjectHookFactory } from './factories/subject-hook.factory';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -90,5 +91,6 @@ export function UsePermissionsControl(
       subjectHook,
     }),
     UseGuards(PermissionsGuard),
+    ApiBearerAuth(),
   );
 }

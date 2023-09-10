@@ -1,6 +1,6 @@
 import { IntersectionType, PickType } from '@nestjs/swagger';
 import { RegisteredJwtClaimsDTO } from './jwt-claims-registered.dto';
-import { RefreshJwtClaims } from '../types';
+import { RefreshJwtClaims } from '../auth.interface';
 import { plainToInstance } from 'class-transformer';
 import { JWTPayload } from 'jose';
 import { IsUUID } from 'class-validator';

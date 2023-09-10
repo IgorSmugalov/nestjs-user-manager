@@ -10,14 +10,18 @@ import { UseResponseSerializer } from 'src/lib/serialization/use-response-serial
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { ProfileDoesNotExistsException } from './profile.exceptions';
 import { AvatarPathInterceptor } from './interceptors/define-avatar-urn.interceptor';
+import { UsePermissionsControl } from 'src/permissions';
+import { ProfileActions } from './profile.permissions';
+import { ProfileIdHook } from './hooks/profile-id.hook';
 
 @Controller('profile')
+@UseRequestValidation()
 @ApiTags('Profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get(':id')
-  @UseRequestValidation()
+  @UsePermissionsControl(ProfileActions.read, ProfileDTO)
   @UseResponseSerializer(ProfileDTO, [AvatarPathInterceptor])
   @ApiOkResponse({ type: ProfileDTO })
   @ApiException(() => ProfileDoesNotExistsException)
@@ -26,8 +30,8 @@ export class ProfileController {
   }
 
   @Patch(':id')
+  @UsePermissionsControl(ProfileActions.update, ProfileIdDTO, ProfileIdHook)
   @ParseProfileFormData()
-  @UseRequestValidation()
   @UseResponseSerializer(ProfileDTO, [AvatarPathInterceptor])
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateProfileDTO })
